@@ -1,0 +1,23 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b
+
+newmtl white
+	Ns 9.999999
+	Ni 1.500000
+	Ka 0.588235 0.588235 0.588235
+	Kd 1.000000 1.000000 1.000000
+	Ks 0.000000 0.000000 0.000000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka maps\color.jpg
+	map_Kd maps\color.jpg
+	map_Ks maps\specular.jpg
+
+newmtl red
+	Ns 9.999999
+	Ni 1.500000
+	Ka 0.588235 0.588235 0.588235
+	Kd 0.709804 0.000000 0.000000
+	Ks 0.000000 0.000000 0.000000
+	Ke 0.000000 0.000000 0.000000
+	map_Ka maps\color.jpg
+	map_Kd maps\color.jpg
+	map_Ks maps\specular.jpg
