@@ -22,7 +22,7 @@ export default function NestedContextStory() {
     // Update the rotation to add a bit on each update
     useAnimationFrame(() => {
       setRotation(r => (r + spinSpeed) % (2 * Math.PI));
-    }, [rotation, setRotation]);
+    }, [setRotation]);
     const Context = Contexts[i];
     return <Context.Provider value={rotation}>{children}</Context.Provider>;
   };
