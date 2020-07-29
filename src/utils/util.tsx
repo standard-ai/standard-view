@@ -104,24 +104,17 @@ export function areArraysEqual(array1, array2): boolean {
  */
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export const useAnimationFrame = (callback, dependencies?: any[]): void => {
-  // Use useRef for mutable variables that we want to persist
-  // without triggering a re-render on their change
-  const requestRef = useRef<number>();
-
-  function animate(): void {
-    callback();
-    requestRef.current = requestAnimationFrame(animate);
-  }
-
   useEffect(() => {
-    requestRef.current = requestAnimationFrame(animate);
-    return (): void => {
-      if (requestRef.current != null) {
-        cancelAnimationFrame(requestRef.current);
-      }
-    };
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, dependencies); // Make sure the effect runs only once
+    // The reference, global for this useEffect() instance
+    let id;
+    (function loop(): void {
+      id = requestAnimationFrame(loop);
+      // Callback has to be AFTER requesting the new animation frame
+      callback();
+    })();
+    return (): void => cancelAnimationFrame(id);
+    // eslint-disable-next-line
+  }, dependencies);
 };
 
 /**
