@@ -3,6 +3,7 @@ import * as THREE from "three";
 import React, { memo, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import Stats from "stats.js";
+import { useAnimationFrame } from "./hooks";
 import { ANCHORS, ANCHOR_SYNONYMS } from "./constants";
 
 /**
@@ -98,24 +99,6 @@ export function areArraysEqual(array1, array2): boolean {
     array1[2] === array2[2]
   );
 }
-
-/**
- * useAnimationFrame
- */
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export const useAnimationFrame = (callback, dependencies?: any[]): void => {
-  useEffect(() => {
-    // The reference, global for this useEffect() instance
-    let id;
-    (function loop(): void {
-      id = requestAnimationFrame(loop);
-      // Callback has to be AFTER requesting the new animation frame
-      callback();
-    })();
-    return (): void => cancelAnimationFrame(id);
-    // eslint-disable-next-line
-  }, dependencies);
-};
 
 /**
  * FPS

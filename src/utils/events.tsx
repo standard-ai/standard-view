@@ -1,7 +1,7 @@
 // events.tsx
 import * as React from "react";
 import { RenderCallback } from "react-three-fiber";
-import { useAnimationFrame } from "./util";
+import { useAnimationFrame } from "./hooks";
 
 const { memo } = React;
 

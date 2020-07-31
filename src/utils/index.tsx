@@ -14,5 +14,5 @@ export {
   CONTROLS_TYPES,
   CAMERA_TYPES
 } from "./constants";
-export { FPS, useAnimationFrame, billboard } from "./util";
-export { useFrame, useViewContext } from "./hooks";
+export { FPS, billboard } from "./util";
+export { useFrame, useViewContext, useAnimationFrame } from "./hooks";

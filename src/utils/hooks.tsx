@@ -1,5 +1,12 @@
 // hooks.ts
-import { useState, useMemo, useCallback, useContext } from "react";
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useContext,
+  useRef,
+  useEffect
+} from "react";
 import { useFrame as r3rUseFrame, RenderCallback } from "react-three-fiber";
 import { ViewContext } from "../views/ViewContext";
 
@@ -53,3 +60,28 @@ export function useViewContext(): any {
 
   return { setViewContext, ...canvasProps };
 }
+
+/**
+ * useAnimationFrame
+ */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+export const useAnimationFrame = (callback, dependencies?: any[]): void => {
+  // Use useRef for mutable variables that we want to persist
+  // without triggering a re-render on their change
+  const requestRef = useRef<number>();
+
+  function animate(): void {
+    callback();
+    requestRef.current = requestAnimationFrame(animate);
+  }
+
+  useEffect(() => {
+    animate();
+    return (): void => {
+      if (requestRef.current != null) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, dependencies); // Make sure the effect runs only once
+};
