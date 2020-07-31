@@ -21,7 +21,7 @@ import { View3D, Box } from '@standard/view';
 </View3D>
 ```
 
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/example.png?raw=true" width="250" height="200" />
+<img src="example-gifs/example.png?raw=true" width="250" height="200" />
 
 For details about valid properties, look at the interfaces named `*Props`, where `*` is the component name, in `src/primitves/` and `src/groups/`.
 
@@ -33,20 +33,20 @@ You may also visit [Standard View Storybook](https://standard-view.netlify.app/?
 ### Examples
 
 <p align="center">
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/sample-platter.gif?raw=true" width="800" height="400" />
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/standard-cube.gif?raw=true" width="400" height="400" />
+<img src="example-gifs/sample-platter.gif?raw=true" width="800" height="400" />
+<img src="example-gifs/standard-cube.gif?raw=true" width="400" height="400" />
 </p>
 
 ## create-react-app to Standard View Project
 
 <p align="center">
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/create-app-to-standard-view.gif?raw=true" />
+<img src="example-gifs/create-app-to-standard-view.gif?raw=true" />
 </p>
 
 ## Fit to Window
 
 <p align="center">
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/canvas-css.gif?raw=true" />
+<img src="example-gifs/canvas-css.gif?raw=true" />
 </p>
 
 Set `.App canvas` in css file to adjust Standard View `View3D` canvas.
@@ -54,7 +54,7 @@ Set `.App canvas` in css file to adjust Standard View `View3D` canvas.
 ## Intellisense
 
 <p align="center">
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/intellisense.gif?raw=true" />
+<img src="example-gifs/intellisense.gif?raw=true" />
 </p>
 
 For VSCode, press `ctrl + space` to force load intellisense at cursor location.
@@ -80,6 +80,7 @@ Groups
 - `Arrow`
 - `Axis`
 - `Capsule`
+- `FBX`
 - `GLTF`
 - `OBJ`
 - `PCD`
