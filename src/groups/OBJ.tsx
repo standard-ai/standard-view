@@ -1,11 +1,11 @@
 // OBJ.tsx
-import * as React from "react";
-import * as THREE from "three";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
-import Label from "../primitives/Label";
-import Group, { GroupProps } from "./Group";
-import { useViewContext } from "../utils/hooks";
+import * as React from 'react';
+import * as THREE from 'three';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
+import Label from '../primitives/Label';
+import Group, { GroupProps } from './Group';
+import { useViewContext } from '../utils/hooks';
 
 const { useEffect, useMemo, useRef, memo } = React;
 
@@ -14,6 +14,7 @@ interface OBJProps extends GroupProps {
   objURL: string;
   mtlPath?: string;
   mtlURL?: string;
+  loadingLabel?: boolean;
   resourcePath?: string;
 }
 
@@ -72,12 +73,12 @@ function loadOBJAndMTL({
   resourcePath,
   castShadow,
   receiveShadow,
-  materialProps
+  materialProps,
 }: LoadOBJAndMTL): void {
   // No OBJ
   if (objURL == null) {
     /* eslint-disable-next-line no-console */
-    console.warn("[OBJ] No objURL");
+    console.warn('[OBJ] No objURL');
     return;
   }
 
@@ -163,7 +164,7 @@ function loadOBJAndMTL({
  * mtlPath.
  */
 const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
-  objPath = "",
+  objPath = '',
   objURL,
   mtlPath,
   mtlURL,
@@ -171,6 +172,7 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
   view3DEnvMap = false,
   castShadow = false,
   receiveShadow = false,
+  loadingLabel = true,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
@@ -186,13 +188,13 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
 
       // Acceptable Material Props
       const materialPropsKeys = [
-        "color",
-        "wireframe",
-        "opacity",
-        "transparent",
-        "side",
-        "depthWrite",
-        "depthTest"
+        'color',
+        'wireframe',
+        'opacity',
+        'transparent',
+        'side',
+        'depthWrite',
+        'depthTest',
       ];
 
       // Extract Acceptable Props
@@ -225,7 +227,7 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
   // Loading Text
   const loadingText = useMemo(
     function updateLoadText() {
-      return objURL || "No objURL";
+      return objURL || 'No objURL';
     },
     [objURL]
   );
@@ -244,7 +246,7 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
           resourcePath,
           castShadow,
           receiveShadow,
-          materialProps
+          materialProps,
         });
       }
     },
@@ -257,17 +259,17 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
       _envMap,
       castShadow,
       receiveShadow,
-      materialProps
+      materialProps,
     ]
   );
 
   return (
     <Group ref={group} {...otherProps}>
-      <Label text={loadingText} textColor="red" />
+      {loadingLabel && <Label text={loadingText} textColor="red" />}
     </Group>
   );
 };
 
 const OBJMemo = memo(OBJ);
-OBJMemo.displayName = "OBJ";
+OBJMemo.displayName = 'OBJ';
 export default OBJMemo;

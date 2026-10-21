@@ -16,6 +16,7 @@ interface GLTFProps extends GroupProps {
   gltfPath?: string;
   gltfURL: string;
   dracoDecoderPath?: string;
+  loadingLabel: boolean;
 }
 
 function updateAllMaterials(
@@ -135,6 +136,7 @@ const GLTF: React.FunctionComponent<GLTFProps> = function GLTF({
   view3DEnvMap = false,
   castShadow = false,
   receiveShadow = false,
+  loadingLabel = true,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
@@ -224,7 +226,7 @@ const GLTF: React.FunctionComponent<GLTFProps> = function GLTF({
 
   return (
     <Group ref={group} {...otherProps}>
-      <Label text={loadingText} textColor="red" />
+      {loadingLabel && <Label text={loadingText} textColor="red" />}
     </Group>
   );
 };

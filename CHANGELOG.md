@@ -1,5 +1,9 @@
 # Changelog
 
+# 2.0.4
+
+- 💫 Added loadingLabel for `FBX`, `GLTF`, `OBJ`, and `PCD`
+
 # 2.0.3
 
 - 🧹 Reverted Timer usage to Clock in `FBX.tsx`

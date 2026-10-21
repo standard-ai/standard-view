@@ -1,9 +1,9 @@
 // PCD.tsx
-import * as React from "react";
-import * as THREE from "three";
-import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader.js";
-import Label from "../primitives/Label";
-import Group, { GroupProps } from "./Group";
+import * as React from 'react';
+import * as THREE from 'three';
+import { PCDLoader } from 'three/examples/jsm/loaders/PCDLoader.js';
+import Label from '../primitives/Label';
+import Group, { GroupProps } from './Group';
 
 const { useRef, useEffect, useMemo, memo } = React;
 
@@ -17,7 +17,7 @@ function loadPCD(
   // No PCD
   if (pcdURL == null) {
     /* eslint-disable-next-line no-console */
-    console.warn("[PCD] No pcdURL");
+    console.warn('[PCD] No pcdURL');
   }
 
   // PCD
@@ -48,19 +48,21 @@ interface PCDProps extends GroupProps {
   pcdPath: string;
   pcdURL: string;
   pointSize: number;
+  loadingLabel: boolean;
 }
 
 const PCD: React.FunctionComponent<PCDProps> = function PCD({
-  pcdPath = "",
+  pcdPath = '',
   pcdURL,
   pointSize = 0.01,
+  loadingLabel = true,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
 
   const loadingText = useMemo(
     function updateLoadText() {
-      return pcdURL || "No pcdURL";
+      return pcdURL || 'No pcdURL';
     },
     [pcdURL]
   );
@@ -77,11 +79,11 @@ const PCD: React.FunctionComponent<PCDProps> = function PCD({
 
   return (
     <Group ref={group} {...otherProps}>
-      <Label text={loadingText} textColor="red" />
+      {loadingLabel && <Label text={loadingText} textColor="red" />}
     </Group>
   );
 };
 
 const PCDMemo = memo(PCD);
-PCDMemo.displayName = "PCD";
+PCDMemo.displayName = 'PCD';
 export default PCDMemo;

@@ -9,6 +9,7 @@ import { Label } from '../primitives';
 interface FBXProps extends GroupProps {
   fbxPath?: string;
   fbxURL: string;
+  loadingLabel: boolean;
   actionIndex?: number;
 }
 
@@ -137,6 +138,7 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
   view3DEnvMap = false,
   castShadow = false,
   receiveShadow = false,
+  loadingLabel = true,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
@@ -242,7 +244,7 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
 
   return (
     <Group ref={group} {...otherProps}>
-      <Label text={loadingText} textColor="red" />
+      {loadingLabel && <Label text={loadingText} textColor="red" />}
     </Group>
   );
 };
