@@ -16,7 +16,7 @@ interface GLTFProps extends GroupProps {
   gltfPath?: string;
   gltfURL: string;
   dracoDecoderPath?: string;
-  loadingLabel: boolean;
+  loadingLabel?: boolean;
 }
 
 function updateAllMaterials(

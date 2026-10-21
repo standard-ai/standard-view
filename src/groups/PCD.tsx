@@ -48,7 +48,7 @@ interface PCDProps extends GroupProps {
   pcdPath: string;
   pcdURL: string;
   pointSize: number;
-  loadingLabel: boolean;
+  loadingLabel?: boolean;
 }
 
 const PCD: React.FunctionComponent<PCDProps> = function PCD({

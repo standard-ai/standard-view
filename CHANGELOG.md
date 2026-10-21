@@ -1,8 +1,12 @@
 # Changelog
 
+# 2.0.5
+
+- 🐞 `loadingLabel` now optional for all components
+
 # 2.0.4
 
-- 💫 Added loadingLabel for `FBX`, `GLTF`, `OBJ`, and `PCD`
+- 💫 Added `loadingLabel` for `FBX`, `GLTF`, `OBJ`, and `PCD`
 
 # 2.0.3
 

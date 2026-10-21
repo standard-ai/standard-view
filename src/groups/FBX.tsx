@@ -9,7 +9,7 @@ import { Label } from '../primitives';
 interface FBXProps extends GroupProps {
   fbxPath?: string;
   fbxURL: string;
-  loadingLabel: boolean;
+  loadingLabel?: boolean;
   actionIndex?: number;
 }
 
