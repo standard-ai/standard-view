@@ -306,14 +306,11 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
   );
 
   // Animation Mixer Update
-  // THREE.Clock is part of three core (no addon subpath), so it resolves on
-  // every three version consumers may have -- unlike the example `Timer`,
-  // whose module path differs across three releases. Clock.getDelta() returns
-  // the elapsed time since the previous call, which is exactly what the mixer
-  // needs.
-  const clock = useMemo(() => new THREE.Clock(), []);
-  useFrame(function updateMixer() {
-    const delta = clock.getDelta();
+  // @react-three/fiber passes every frame callback the seconds elapsed since
+  // the previous frame, which is exactly what the mixer needs, so no clock of
+  // our own: THREE.Clock is deprecated since three.js r183 and warns on every
+  // construction.
+  useFrame(function updateMixer(_state, delta: number) {
     if (mixer.current) {
       mixer.current.update(delta);
     }
