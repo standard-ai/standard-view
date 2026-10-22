@@ -17,6 +17,7 @@ function PCDComponent({
   normal,
   roll,
   pointSize,
+  hoverColor,
 }: any): React.ReactNode {
   return (
     <View3D
@@ -39,6 +40,7 @@ function PCDComponent({
         pcdURL={pcdURL}
         visible={visible}
         pointSize={pointSize}
+        hoverColor={hoverColor}
       />
     </View3D>
   );
@@ -56,6 +58,7 @@ export function PCDStory(args: any = {}): React.ReactElement {
     normal = DEFAULT_NORMAL,
     roll = 0,
     pointSize = 0.01,
+    hoverColor = 'yellow',
   } = args || {};
 
   const props = {
@@ -69,6 +72,7 @@ export function PCDStory(args: any = {}): React.ReactElement {
     normal,
     roll,
     pointSize,
+    hoverColor,
   };
 
   return <PCDComponent {...props} />;
@@ -85,6 +89,7 @@ PCDStory.args = {
   normal: DEFAULT_NORMAL,
   roll: 0,
   pointSize: 0.01,
+  hoverColor: 'yellow',
 };
 
 PCDStory.argTypes = {
@@ -137,6 +142,11 @@ PCDStory.argTypes = {
     control: { type: 'number', min: 0.001, max: 0.1, step: 0.001 },
     description: 'Point size',
     defaultValue: 0.01,
+  },
+  hoverColor: {
+    control: { type: 'color' },
+    description: 'Tint applied to the point cloud while the pointer is over it',
+    defaultValue: 'yellow',
   },
 };
 

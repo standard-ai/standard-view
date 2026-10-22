@@ -4,8 +4,14 @@ import * as THREE from 'three';
 import { PCDLoader } from 'three/examples/jsm/loaders/PCDLoader.js';
 import Label from '../primitives/Label';
 import Group, { GroupProps } from './Group';
+import {
+  ModelMaterialProps,
+  applyModelMaterialProps,
+  pickModelMaterialProps,
+  setModelHoverTint,
+} from '../utils/modelMaterials';
 
-const { useCallback, useRef, useEffect, useMemo, memo } = React;
+const { useCallback, useRef, useEffect, useMemo, useState, memo } = React;
 
 /**
  * removeChildren
@@ -26,6 +32,7 @@ interface LoadPCDProps {
   pcdPath: string;
   pcdURL: string;
   pointSize: number;
+  materialProps?: ModelMaterialProps;
   onLoad: (pcd: THREE.Points) => void;
   onError: (error: unknown) => void;
 }
@@ -44,6 +51,7 @@ function loadPCD({
   pcdPath,
   pcdURL,
   pointSize,
+  materialProps,
   onLoad,
   onError,
 }: LoadPCDProps): () => void {
@@ -74,12 +82,14 @@ function loadPCD({
         removeChildren(group);
 
         // Material Props
+        // The points material takes the ones it has (color, opacity, ...).
         if (pcd.material) {
           /* eslint-disable no-param-reassign */
           // @ts-ignore:TS2339 size does not exist
           pcd.material.size = pointSize;
           /* eslint-enable no-param-reassign */
         }
+        applyModelMaterialProps(pcd, materialProps);
 
         // Add PCD
         group.current.add(pcd);
@@ -121,9 +131,59 @@ const PCD: React.FunctionComponent<PCDProps> = function PCD({
   loadingLabel = true,
   onLoad,
   onError,
+  hoverColor,
+  onPointerOver,
+  onPointerOut,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
+  const model = useRef<THREE.Object3D | null>(null);
+
+  // Hover
+  // The loaded point cloud is added to the group imperatively, so the hover
+  // color Group clones onto its React children never reaches it. Track the
+  // hover here (through the handlers Group calls) and tint its material.
+  const [hovered, setHovered] = useState(false);
+  const hoveredRef = useRef(false);
+  const hoverColorRef = useRef(hoverColor);
+  hoverColorRef.current = hoverColor;
+  const handlePointerOver = useCallback(
+    function handlePointerOver(eventProps: unknown): void {
+      hoveredRef.current = true;
+      setHovered(true);
+      if (onPointerOver) {
+        onPointerOver(eventProps);
+      }
+    },
+    [onPointerOver]
+  );
+  const handlePointerOut = useCallback(
+    function handlePointerOut(eventProps: unknown): void {
+      hoveredRef.current = false;
+      setHovered(false);
+      if (onPointerOut) {
+        onPointerOut(eventProps);
+      }
+    },
+    [onPointerOut]
+  );
+  // Only attach handlers when something listens, so a loader inside a Group
+  // keeps forwarding events to that Group as before.
+  const hoverHandlers =
+    hoverColor != null || onPointerOver || onPointerOut
+      ? { onPointerOver: handlePointerOver, onPointerOut: handlePointerOut }
+      : {};
+  useEffect(
+    function updateHoverTint() {
+      if (model.current) {
+        setModelHoverTint(
+          model.current,
+          hovered && hoverColor != null ? hoverColor : null
+        );
+      }
+    },
+    [hovered, hoverColor]
+  );
 
   // Latest Callbacks
   // Read at load time through refs, so a new inline function on a re-render
@@ -133,15 +193,47 @@ const PCD: React.FunctionComponent<PCDProps> = function PCD({
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
   const handleLoad = useCallback(function handleLoad(pcd: THREE.Points): void {
+    model.current = pcd;
+    if (hoveredRef.current && hoverColorRef.current != null) {
+      setModelHoverTint(pcd, hoverColorRef.current);
+    }
     if (onLoadRef.current) {
       onLoadRef.current(pcd);
     }
   }, []);
   const handleError = useCallback(function handleError(error: unknown): void {
+    model.current = null;
     if (onErrorRef.current) {
       onErrorRef.current(error);
     }
   }, []);
+
+  // Material Props
+  // Memoised on the values, not on the props object, so a re-render (a hover,
+  // a parent update) never restarts the load.
+  const {
+    color,
+    wireframe,
+    opacity,
+    transparent,
+    side,
+    depthWrite,
+    depthTest,
+  } = otherProps;
+  const materialProps = useMemo(
+    function updateMaterialProps() {
+      return pickModelMaterialProps({
+        color,
+        wireframe,
+        opacity,
+        transparent,
+        side,
+        depthWrite,
+        depthTest,
+      });
+    },
+    [color, wireframe, opacity, transparent, side, depthWrite, depthTest]
+  );
 
   const loadingText = useMemo(
     function updateLoadText() {
@@ -158,15 +250,21 @@ const PCD: React.FunctionComponent<PCDProps> = function PCD({
         pcdPath,
         pcdURL,
         pointSize,
+        materialProps,
         onLoad: handleLoad,
         onError: handleError,
       });
     },
-    [group, pcdPath, pcdURL, pointSize, handleLoad, handleError]
+    [group, pcdPath, pcdURL, pointSize, materialProps, handleLoad, handleError]
   );
 
   return (
-    <Group ref={group} {...otherProps}>
+    <Group
+      ref={group}
+      hoverColor={hoverColor}
+      {...hoverHandlers}
+      {...otherProps}
+    >
       {loadingLabel && <Label text={loadingText} textColor="red" />}
     </Group>
   );

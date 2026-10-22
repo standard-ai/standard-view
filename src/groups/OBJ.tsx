@@ -6,8 +6,14 @@ import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import Label from '../primitives/Label';
 import Group, { GroupProps } from './Group';
 import { useViewContext } from '../utils/hooks';
+import {
+  ModelMaterialProps,
+  applyModelMaterialProps,
+  pickModelMaterialProps,
+  setModelHoverTint,
+} from '../utils/modelMaterials';
 
-const { useCallback, useEffect, useMemo, useRef, memo } = React;
+const { useCallback, useEffect, useMemo, useRef, useState, memo } = React;
 
 interface OBJProps extends GroupProps {
   objPath: string;
@@ -40,23 +46,58 @@ interface LoadOBJ {
   group: React.MutableRefObject<any>;
   objPath: string;
   objURL: string;
+  envMap?: THREE.Texture;
   castShadow: boolean;
   receiveShadow: boolean;
+  materialProps?: ModelMaterialProps;
   isCancelled: () => boolean;
   onLoad: (obj: THREE.Group) => void;
   onError: (error: unknown) => void;
 }
 
-function loadOBJ({
-  group,
-  objPath,
-  objURL,
-  castShadow,
-  receiveShadow,
-  isCancelled,
-  onLoad,
-  onError,
-}: LoadOBJ): void {
+/**
+ * addOBJ
+ *
+ * Puts a loaded object into the group: clears the loading Label or the
+ * previous model, applies the material props, the environment map and the
+ * shadow flags, adds the object and reports it.
+ */
+function addOBJ(
+  { group, envMap, castShadow, receiveShadow, materialProps, onLoad }: LoadOBJ,
+  obj: THREE.Group
+): void {
+  if (!group.current) {
+    return;
+  }
+
+  // Remove Loading Label or Previous OBJ
+  removeChildren(group);
+
+  // Material Props
+  applyModelMaterialProps(obj, materialProps);
+
+  // Env Map + Shadows
+  obj.traverse(mesh => {
+    /* eslint-disable no-param-reassign */
+    // @ts-ignore
+    if (mesh.isMesh) {
+      if (envMap) {
+        // @ts-ignore
+        mesh.material.envMap = envMap;
+      }
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = receiveShadow;
+    }
+    /* eslint-enable no-param-reassign */
+  });
+
+  // Add OBJ
+  group.current.add(obj);
+  onLoad(obj);
+}
+
+function loadOBJ(props: LoadOBJ): void {
+  const { group, objPath, objURL, isCancelled, onError } = props;
   const loader = new OBJLoader();
   loader.setPath(objPath);
   loader.load(
@@ -66,25 +107,7 @@ function loadOBJ({
         return;
       }
 
-      // Remove Loading Label or Previous OBJ
-      if (group.current) {
-        removeChildren(group);
-
-        // Shadows
-        obj.traverse(mesh => {
-          /* eslint-disable no-param-reassign */
-          // @ts-ignore:TS2339 isMesh does not exist on Object3D
-          if (mesh.isMesh) {
-            mesh.castShadow = castShadow;
-            mesh.receiveShadow = receiveShadow;
-          }
-          /* eslint-enable no-param-reassign */
-        });
-
-        // Add OBJ
-        group.current.add(obj);
-        onLoad(obj);
-      }
+      addOBJ(props, obj);
     },
     undefined,
     error => {
@@ -105,9 +128,6 @@ interface LoadOBJAndMTL extends Omit<LoadOBJ, 'isCancelled'> {
   mtlPath?: string;
   mtlURL?: string;
   resourcePath?: string;
-  envMap?: THREE.Texture;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  materialProps?: any;
 }
 
 /**
@@ -146,18 +166,22 @@ function loadOBJAndMTL({
     return cancel;
   }
 
+  const loadProps: LoadOBJ = {
+    group,
+    objPath,
+    objURL,
+    envMap,
+    castShadow,
+    receiveShadow,
+    materialProps,
+    isCancelled,
+    onLoad,
+    onError,
+  };
+
   // OBJ
   if (mtlPath == null || mtlURL == null) {
-    loadOBJ({
-      group,
-      objPath,
-      objURL,
-      castShadow,
-      receiveShadow,
-      isCancelled,
-      onLoad,
-      onError,
-    });
+    loadOBJ(loadProps);
     return cancel;
   }
 
@@ -186,55 +210,7 @@ function loadOBJAndMTL({
             return;
           }
 
-          if (group.current) {
-            // Remove Loading Label or Previous OBJ
-            removeChildren(group);
-
-            // Material Props
-            if (materialProps && obj.children) {
-              const { color, ...otherMaterialProps } = materialProps;
-              // Set Material Props for Each Mesh in OBJ Group of Meshes
-              obj.children.map(mesh => {
-                // @ts-ignore:TS2339 material does not exist on Object3D
-                if (mesh.material) {
-                  if (color) {
-                    // @ts-ignore:TS2339 material does not exist on Object3D
-                    mesh.material.color.set(color);
-                  }
-                  Object.entries(otherMaterialProps).map(
-                    ([propName, value]) => {
-                      /* eslint-disable no-param-reassign */
-                      // @ts-ignore:TS2339 material does not exist on Object3D
-                      mesh.material[propName] = value;
-                      /* eslint-enable no-param-reassign */
-                      return null;
-                    }
-                  );
-                }
-
-                return null;
-              });
-            }
-
-            // Env Map + Shadows
-            obj.traverse(mesh => {
-              /* eslint-disable no-param-reassign */
-              // @ts-ignore
-              if (mesh.isMesh) {
-                if (envMap) {
-                  // @ts-ignore
-                  mesh.material.envMap = envMap;
-                }
-                mesh.castShadow = castShadow;
-                mesh.receiveShadow = receiveShadow;
-              }
-              /* eslint-enable no-param-reassign */
-            });
-
-            // Add OBJ + MTL
-            group.current.add(obj);
-            onLoad(obj);
-          }
+          addOBJ(loadProps, obj);
         },
         undefined,
         error => {
@@ -292,10 +268,60 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
   loadingLabel = true,
   onLoad,
   onError,
+  hoverColor,
+  onPointerOver,
+  onPointerOut,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
+  const model = useRef<THREE.Object3D | null>(null);
   const { envMap } = useViewContext();
+
+  // Hover
+  // The loaded model is added to the group imperatively, so the hover color
+  // Group clones onto its React children never reaches it. Track the hover
+  // here (through the handlers Group calls) and tint the model's materials.
+  const [hovered, setHovered] = useState(false);
+  const hoveredRef = useRef(false);
+  const hoverColorRef = useRef(hoverColor);
+  hoverColorRef.current = hoverColor;
+  const handlePointerOver = useCallback(
+    function handlePointerOver(eventProps: unknown): void {
+      hoveredRef.current = true;
+      setHovered(true);
+      if (onPointerOver) {
+        onPointerOver(eventProps);
+      }
+    },
+    [onPointerOver]
+  );
+  const handlePointerOut = useCallback(
+    function handlePointerOut(eventProps: unknown): void {
+      hoveredRef.current = false;
+      setHovered(false);
+      if (onPointerOut) {
+        onPointerOut(eventProps);
+      }
+    },
+    [onPointerOut]
+  );
+  // Only attach handlers when something listens, so a loader inside a Group
+  // keeps forwarding events to that Group as before.
+  const hoverHandlers =
+    hoverColor != null || onPointerOver || onPointerOut
+      ? { onPointerOver: handlePointerOver, onPointerOut: handlePointerOut }
+      : {};
+  useEffect(
+    function updateHoverTint() {
+      if (model.current) {
+        setModelHoverTint(
+          model.current,
+          hovered && hoverColor != null ? hoverColor : null
+        );
+      }
+    },
+    [hovered, hoverColor]
+  );
 
   // Latest Callbacks
   // Read at load time through refs, so a new inline function on a re-render
@@ -305,48 +331,46 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
   const handleLoad = useCallback(function handleLoad(obj: THREE.Group): void {
+    model.current = obj;
+    if (hoveredRef.current && hoverColorRef.current != null) {
+      setModelHoverTint(obj, hoverColorRef.current);
+    }
     if (onLoadRef.current) {
       onLoadRef.current(obj);
     }
   }, []);
   const handleError = useCallback(function handleError(error: unknown): void {
+    model.current = null;
     if (onErrorRef.current) {
       onErrorRef.current(error);
     }
   }, []);
 
   // Material Props
+  // Memoised on the values, not on the props object, so a re-render (a hover,
+  // a parent update) never restarts the load.
+  const {
+    color,
+    wireframe,
+    opacity,
+    transparent,
+    side,
+    depthWrite,
+    depthTest,
+  } = otherProps;
   const materialProps = useMemo(
     function updateMaterialProps() {
-      // No Material Props
-      if (!otherProps || Object.keys(otherProps).length === 0) {
-        return undefined;
-      }
-
-      // Acceptable Material Props
-      const materialPropsKeys = [
-        'color',
-        'wireframe',
-        'opacity',
-        'transparent',
-        'side',
-        'depthWrite',
-        'depthTest',
-      ];
-
-      // Extract Acceptable Props
-      const props = {};
-      materialPropsKeys.map(propName => {
-        if (otherProps[propName]) {
-          props[propName] = otherProps[propName];
-        }
-
-        return null;
+      return pickModelMaterialProps({
+        color,
+        wireframe,
+        opacity,
+        transparent,
+        side,
+        depthWrite,
+        depthTest,
       });
-
-      return Object.keys(props).length > 0 ? props : undefined;
     },
-    [otherProps]
+    [color, wireframe, opacity, transparent, side, depthWrite, depthTest]
   );
 
   // Environment Map
@@ -403,7 +427,12 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
   );
 
   return (
-    <Group ref={group} {...otherProps}>
+    <Group
+      ref={group}
+      hoverColor={hoverColor}
+      {...hoverHandlers}
+      {...otherProps}
+    >
       {loadingLabel && <Label text={loadingText} textColor="red" />}
     </Group>
   );
