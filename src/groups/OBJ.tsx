@@ -7,7 +7,7 @@ import Label from '../primitives/Label';
 import Group, { GroupProps } from './Group';
 import { useViewContext } from '../utils/hooks';
 
-const { useEffect, useMemo, useRef, memo } = React;
+const { useCallback, useEffect, useMemo, useRef, memo } = React;
 
 interface OBJProps extends GroupProps {
   objPath: string;
@@ -16,6 +16,23 @@ interface OBJProps extends GroupProps {
   mtlURL?: string;
   loadingLabel?: boolean;
   resourcePath?: string;
+  /** Called once the loaded object has been added to the group. */
+  onLoad?: (obj: THREE.Group) => void;
+  /** Called once with the loader's error when the .obj or its .mtl cannot be loaded. */
+  onError?: (error: unknown) => void;
+}
+
+/**
+ * removeChildren
+ *
+ * Empties the group: the loading Label, or the previous model.
+ * Object3D.remove mutates the children array, so iterate over a copy.
+ */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function removeChildren(group: React.MutableRefObject<any>): void {
+  if (group.current && Array.isArray(group.current.children)) {
+    group.current.children.slice().map(child => group.current.remove(child));
+  }
 }
 
 interface LoadOBJ {
@@ -25,36 +42,66 @@ interface LoadOBJ {
   objURL: string;
   castShadow: boolean;
   receiveShadow: boolean;
+  isCancelled: () => boolean;
+  onLoad: (obj: THREE.Group) => void;
+  onError: (error: unknown) => void;
 }
 
-function loadOBJ({ group, objPath, objURL, castShadow, receiveShadow }): void {
+function loadOBJ({
+  group,
+  objPath,
+  objURL,
+  castShadow,
+  receiveShadow,
+  isCancelled,
+  onLoad,
+  onError,
+}: LoadOBJ): void {
   const loader = new OBJLoader();
   loader.setPath(objPath);
-  loader.load(objURL, obj => {
-    // Remove Loading Label or Previous OBJ
-    if (group.current) {
-      if (group.current.children) {
-        group.current.children.map(child => group.current.remove(child));
+  loader.load(
+    objURL,
+    obj => {
+      if (isCancelled()) {
+        return;
       }
 
-      // Shadows
-      obj.traverse(mesh => {
-        /* eslint-disable no-param-reassign */
-        // @ts-ignore:TS2339 isMesh does not exist on Object3D
-        if (mesh.isMesh) {
-          mesh.castShadow = castShadow;
-          mesh.receiveShadow = receiveShadow;
-        }
-        /* eslint-enable no-param-reassign */
-      });
+      // Remove Loading Label or Previous OBJ
+      if (group.current) {
+        removeChildren(group);
 
-      // Add OBJ
-      group.current.add(obj);
+        // Shadows
+        obj.traverse(mesh => {
+          /* eslint-disable no-param-reassign */
+          // @ts-ignore:TS2339 isMesh does not exist on Object3D
+          if (mesh.isMesh) {
+            mesh.castShadow = castShadow;
+            mesh.receiveShadow = receiveShadow;
+          }
+          /* eslint-enable no-param-reassign */
+        });
+
+        // Add OBJ
+        group.current.add(obj);
+        onLoad(obj);
+      }
+    },
+    undefined,
+    error => {
+      if (isCancelled()) {
+        return;
+      }
+
+      // Load Failure: log, draw nothing, report. Never throw.
+      /* eslint-disable-next-line no-console */
+      console.error(`[OBJ] Failed to load ${objPath}${objURL}`, error);
+      removeChildren(group);
+      onError(error);
     }
-  });
+  );
 }
 
-interface LoadOBJAndMTL extends LoadOBJ {
+interface LoadOBJAndMTL extends Omit<LoadOBJ, 'isCancelled'> {
   mtlPath?: string;
   mtlURL?: string;
   resourcePath?: string;
@@ -63,6 +110,15 @@ interface LoadOBJAndMTL extends LoadOBJ {
   materialProps?: any;
 }
 
+/**
+ * loadOBJAndMTL
+ *
+ * Loads the .obj (and its .mtl, when both mtlPath and mtlURL are given) into
+ * the group and returns a cancel function. Once cancelled (the URL changed, or
+ * the component unmounted), a load that completes or fails afterwards touches
+ * nothing. A failed load of either file never throws: it is logged with the
+ * URL, nothing is drawn, and onError is called once.
+ */
 function loadOBJAndMTL({
   group,
   objPath,
@@ -74,18 +130,35 @@ function loadOBJAndMTL({
   castShadow,
   receiveShadow,
   materialProps,
-}: LoadOBJAndMTL): void {
+  onLoad,
+  onError,
+}: LoadOBJAndMTL): () => void {
+  let cancelled = false;
+  const cancel = (): void => {
+    cancelled = true;
+  };
+  const isCancelled = (): boolean => cancelled;
+
   // No OBJ
   if (objURL == null) {
     /* eslint-disable-next-line no-console */
     console.warn('[OBJ] No objURL');
-    return;
+    return cancel;
   }
 
   // OBJ
   if (mtlPath == null || mtlURL == null) {
-    loadOBJ({ group, objPath, objURL, castShadow, receiveShadow });
-    return;
+    loadOBJ({
+      group,
+      objPath,
+      objURL,
+      castShadow,
+      receiveShadow,
+      isCancelled,
+      onLoad,
+      onError,
+    });
+    return cancel;
   }
 
   // OBJ + MTL
@@ -95,62 +168,106 @@ function loadOBJAndMTL({
     // @ts-ignore:TS2339 property setResourcePath does not exist in MTLLoader
     mtlLoader.setResourcePath(resourcePath);
   }
-  mtlLoader.load(mtlURL, mtl => {
-    mtl.preload();
-    const objLoader = new OBJLoader();
-    objLoader.setMaterials(mtl);
-    objLoader.setPath(objPath);
-    objLoader.load(objURL, obj => {
-      if (group.current) {
-        // Remove Loading Label or Previous OBJ
-        if (group.current.children) {
-          group.current.children.map(child => group.current.remove(child));
-        }
+  mtlLoader.load(
+    mtlURL,
+    mtl => {
+      if (cancelled) {
+        return;
+      }
 
-        // Material Props
-        if (materialProps && obj.children) {
-          const { color, ...otherMaterialProps } = materialProps;
-          // Set Material Props for Each Mesh in OBJ Group of Meshes
-          obj.children.map(mesh => {
-            // @ts-ignore:TS2339 material does not exist on Object3D
-            if (mesh.material) {
-              if (color) {
+      mtl.preload();
+      const objLoader = new OBJLoader();
+      objLoader.setMaterials(mtl);
+      objLoader.setPath(objPath);
+      objLoader.load(
+        objURL,
+        obj => {
+          if (cancelled) {
+            return;
+          }
+
+          if (group.current) {
+            // Remove Loading Label or Previous OBJ
+            removeChildren(group);
+
+            // Material Props
+            if (materialProps && obj.children) {
+              const { color, ...otherMaterialProps } = materialProps;
+              // Set Material Props for Each Mesh in OBJ Group of Meshes
+              obj.children.map(mesh => {
                 // @ts-ignore:TS2339 material does not exist on Object3D
-                mesh.material.color.set(color);
-              }
-              Object.entries(otherMaterialProps).map(([propName, value]) => {
-                /* eslint-disable no-param-reassign */
-                // @ts-ignore:TS2339 material does not exist on Object3D
-                mesh.material[propName] = value;
-                /* eslint-enable no-param-reassign */
+                if (mesh.material) {
+                  if (color) {
+                    // @ts-ignore:TS2339 material does not exist on Object3D
+                    mesh.material.color.set(color);
+                  }
+                  Object.entries(otherMaterialProps).map(
+                    ([propName, value]) => {
+                      /* eslint-disable no-param-reassign */
+                      // @ts-ignore:TS2339 material does not exist on Object3D
+                      mesh.material[propName] = value;
+                      /* eslint-enable no-param-reassign */
+                      return null;
+                    }
+                  );
+                }
+
                 return null;
               });
             }
 
-            return null;
-          });
-        }
-
-        // Env Map + Shadows
-        obj.traverse(mesh => {
-          /* eslint-disable no-param-reassign */
-          // @ts-ignore
-          if (mesh.isMesh) {
-            if (envMap) {
+            // Env Map + Shadows
+            obj.traverse(mesh => {
+              /* eslint-disable no-param-reassign */
               // @ts-ignore
-              mesh.material.envMap = envMap;
-            }
-            mesh.castShadow = castShadow;
-            mesh.receiveShadow = receiveShadow;
-          }
-          /* eslint-enable no-param-reassign */
-        });
+              if (mesh.isMesh) {
+                if (envMap) {
+                  // @ts-ignore
+                  mesh.material.envMap = envMap;
+                }
+                mesh.castShadow = castShadow;
+                mesh.receiveShadow = receiveShadow;
+              }
+              /* eslint-enable no-param-reassign */
+            });
 
-        // Add OBJ + MTL
-        group.current.add(obj);
+            // Add OBJ + MTL
+            group.current.add(obj);
+            onLoad(obj);
+          }
+        },
+        undefined,
+        error => {
+          if (cancelled) {
+            return;
+          }
+
+          // Load Failure: log, draw nothing, report. Never throw.
+          /* eslint-disable-next-line no-console */
+          console.error(`[OBJ] Failed to load ${objPath}${objURL}`, error);
+          removeChildren(group);
+          onError(error);
+        }
+      );
+    },
+    undefined,
+    error => {
+      if (cancelled) {
+        return;
       }
-    });
-  });
+
+      // Material Load Failure: the model is not drawn without its materials.
+      /* eslint-disable-next-line no-console */
+      console.error(
+        `[OBJ] Failed to load materials ${mtlPath}${mtlURL}`,
+        error
+      );
+      removeChildren(group);
+      onError(error);
+    }
+  );
+
+  return cancel;
 }
 
 /**
@@ -173,10 +290,30 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
   castShadow = false,
   receiveShadow = false,
   loadingLabel = true,
+  onLoad,
+  onError,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
   const { envMap } = useViewContext();
+
+  // Latest Callbacks
+  // Read at load time through refs, so a new inline function on a re-render
+  // never restarts the load.
+  const onLoadRef = useRef(onLoad);
+  onLoadRef.current = onLoad;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+  const handleLoad = useCallback(function handleLoad(obj: THREE.Group): void {
+    if (onLoadRef.current) {
+      onLoadRef.current(obj);
+    }
+  }, []);
+  const handleError = useCallback(function handleError(error: unknown): void {
+    if (onErrorRef.current) {
+      onErrorRef.current(error);
+    }
+  }, []);
 
   // Material Props
   const materialProps = useMemo(
@@ -235,20 +372,20 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
   // Load OBJ + MTL
   useEffect(
     function updateOBJAndMTL() {
-      if (group) {
-        loadOBJAndMTL({
-          group,
-          objPath,
-          objURL,
-          mtlPath,
-          mtlURL,
-          envMap: _envMap,
-          resourcePath,
-          castShadow,
-          receiveShadow,
-          materialProps,
-        });
-      }
+      return loadOBJAndMTL({
+        group,
+        objPath,
+        objURL,
+        mtlPath,
+        mtlURL,
+        envMap: _envMap,
+        resourcePath,
+        castShadow,
+        receiveShadow,
+        materialProps,
+        onLoad: handleLoad,
+        onError: handleError,
+      });
     },
     [
       objPath,
@@ -260,6 +397,8 @@ const OBJ: React.FunctionComponent<OBJProps> = function OBJ({
       castShadow,
       receiveShadow,
       materialProps,
+      handleLoad,
+      handleError,
     ]
   );
 

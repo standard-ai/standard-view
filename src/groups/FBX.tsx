@@ -1,5 +1,5 @@
 // FBX.tsx
-import React, { useEffect, useMemo, useRef, memo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, memo } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { useViewContext, useFrame } from '../utils/hooks';
@@ -11,6 +11,10 @@ interface FBXProps extends GroupProps {
   fbxURL: string;
   loadingLabel?: boolean;
   actionIndex?: number;
+  /** Called once the loaded group has been added, with its animation playing. */
+  onLoad?: (fbx: THREE.Group) => void;
+  /** Called once with the loader's error when the file cannot be loaded. */
+  onError?: (error: unknown) => void;
 }
 
 function updateAllMaterials(
@@ -51,6 +55,19 @@ function updateAllMaterials(
   });
 }
 
+/**
+ * removeChildren
+ *
+ * Empties the group: the loading Label, or the previous model.
+ * Object3D.remove mutates the children array, so iterate over a copy.
+ */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function removeChildren(group: React.MutableRefObject<any>): void {
+  if (group.current && Array.isArray(group.current.children)) {
+    group.current.children.slice().map(child => group.current.remove(child));
+  }
+}
+
 interface LoadFBXProps {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   group: React.MutableRefObject<any>;
@@ -64,8 +81,19 @@ interface LoadFBXProps {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   materialProps: any;
   actionIndex?: number;
+  onLoad: (fbx: THREE.Group) => void;
+  onError: (error: unknown) => void;
 }
 
+/**
+ * loadFBX
+ *
+ * Loads the file into the group and returns a cancel function. Once cancelled
+ * (the URL changed, or the component unmounted), a load that completes or
+ * fails afterwards touches nothing, so a slow earlier file never lands on top
+ * of a newer one. A failed load never throws: it is logged with the URL,
+ * nothing is drawn, and onError is called once.
+ */
 function loadFBX({
   group,
   fbxPath,
@@ -76,59 +104,86 @@ function loadFBX({
   receiveShadow,
   materialProps,
   actionIndex = 0,
-}: LoadFBXProps): void {
+  onLoad,
+  onError,
+}: LoadFBXProps): () => void {
+  let cancelled = false;
+  const cancel = (): void => {
+    cancelled = true;
+  };
+
   // No FBX
   if (fbxURL == null) {
     /* eslint-disable no-console */
     console.warn('[FBX] No fbxURL');
     /* eslint-enable no-console */
-    return;
+    return cancel;
   }
 
   // FBX
   const fbxLoader = new FBXLoader();
   fbxLoader.setPath(fbxPath);
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  fbxLoader.load(fbxURL, (fbx: any) => {
-    if (group.current && fbx) {
-      // Remove Loading Label or Previous OBJ
-      if (group.current.children) {
-        group.current.children.map(child => group.current.remove(child));
+  fbxLoader.load(
+    fbxURL,
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    (fbx: any) => {
+      if (cancelled) {
+        return;
       }
 
-      // Material Props
-      if (materialProps) {
-        const { color, ...otherMaterialProps } = materialProps;
-        updateAllMaterials(color, fbx.scene.children, otherMaterialProps);
-      }
+      if (group.current && fbx) {
+        // Remove Loading Label or Previous FBX
+        removeChildren(group);
 
-      // Animation
-      /* eslint-disable-next-line no-param-reassign */
-      mixer.current = new THREE.AnimationMixer(fbx);
-      if (fbx.animations && fbx.animations.length > 0) {
-        const action = mixer.current.clipAction(fbx.animations[actionIndex]);
-        action.play();
-      }
-
-      // Env Map + Shadows
-      fbx.traverse(mesh => {
-        /* eslint-disable no-param-reassign */
-        // @ts-ignore
-        if (mesh.isMesh) {
-          if (envMap) {
-            // @ts-ignore
-            mesh.material.envMap = envMap;
-          }
-          mesh.castShadow = castShadow;
-          mesh.receiveShadow = receiveShadow;
+        // Material Props
+        if (materialProps) {
+          const { color, ...otherMaterialProps } = materialProps;
+          updateAllMaterials(color, fbx.scene.children, otherMaterialProps);
         }
-        /* eslint-enable no-param-reassign */
-      });
 
-      // Add FBX
-      group.current.add(fbx);
+        // Animation
+        /* eslint-disable-next-line no-param-reassign */
+        mixer.current = new THREE.AnimationMixer(fbx);
+        if (fbx.animations && fbx.animations.length > 0) {
+          const action = mixer.current.clipAction(fbx.animations[actionIndex]);
+          action.play();
+        }
+
+        // Env Map + Shadows
+        fbx.traverse(mesh => {
+          /* eslint-disable no-param-reassign */
+          // @ts-ignore
+          if (mesh.isMesh) {
+            if (envMap) {
+              // @ts-ignore
+              mesh.material.envMap = envMap;
+            }
+            mesh.castShadow = castShadow;
+            mesh.receiveShadow = receiveShadow;
+          }
+          /* eslint-enable no-param-reassign */
+        });
+
+        // Add FBX
+        group.current.add(fbx);
+        onLoad(fbx);
+      }
+    },
+    undefined,
+    error => {
+      if (cancelled) {
+        return;
+      }
+
+      // Load Failure: log, draw nothing, report. Never throw.
+      /* eslint-disable-next-line no-console */
+      console.error(`[FBX] Failed to load ${fbxPath}${fbxURL}`, error);
+      removeChildren(group);
+      onError(error);
     }
-  });
+  );
+
+  return cancel;
 }
 
 const FBX: React.FunctionComponent<FBXProps> = function FBX({
@@ -139,11 +194,31 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
   castShadow = false,
   receiveShadow = false,
   loadingLabel = true,
+  onLoad,
+  onError,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
   const mixer = useRef<THREE.AnimationMixer | null>(null);
   const { envMap } = useViewContext();
+
+  // Latest Callbacks
+  // Read at load time through refs, so a new inline function on a re-render
+  // never restarts the load.
+  const onLoadRef = useRef(onLoad);
+  onLoadRef.current = onLoad;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+  const handleLoad = useCallback(function handleLoad(fbx: THREE.Group): void {
+    if (onLoadRef.current) {
+      onLoadRef.current(fbx);
+    }
+  }, []);
+  const handleError = useCallback(function handleError(error: unknown): void {
+    if (onErrorRef.current) {
+      onErrorRef.current(error);
+    }
+  }, []);
 
   // Material Props
   const materialProps = useMemo(
@@ -202,19 +277,19 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
   // Load FBX and Animation Mixer
   useEffect(
     function updateFBXandMixer() {
-      if (group) {
-        loadFBX({
-          group,
-          fbxPath,
-          fbxURL,
-          mixer,
-          envMap: _envMap,
-          castShadow,
-          receiveShadow,
-          materialProps,
-          actionIndex,
-        });
-      }
+      return loadFBX({
+        group,
+        fbxPath,
+        fbxURL,
+        mixer,
+        envMap: _envMap,
+        castShadow,
+        receiveShadow,
+        materialProps,
+        actionIndex,
+        onLoad: handleLoad,
+        onError: handleError,
+      });
     },
     [
       group,
@@ -225,6 +300,8 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
       castShadow,
       receiveShadow,
       materialProps,
+      handleLoad,
+      handleError,
     ]
   );
 
