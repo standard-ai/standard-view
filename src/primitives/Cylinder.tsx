@@ -1,12 +1,9 @@
 // Cylinder.tsx
-import * as React from "react";
-import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Mesh, { MeshPropTypes, MeshProps } from "./Mesh";
-import { Y_AXIS } from "../utils/constants";
-import { EPS } from "../utils/math";
-import { propTypeNumberArrayOfLength } from "../utils/util";
+import * as React from 'react';
+import * as THREE from 'three';
+import Mesh, { MeshProps } from './Mesh';
+import { Y_AXIS } from '../utils/constants';
+import { EPS } from '../utils/math';
 
 const { useMemo, memo } = React;
 
@@ -101,7 +98,7 @@ const Cylinder: React.FunctionComponent<CylinderProps> = function Cylinder({
       if (rotation) {
         const rot = new THREE.Quaternion().setFromEuler(
           // @ts-ignore:T2345 // spread
-          new THREE.Euler(...rotation, "XYZ")
+          new THREE.Euler(...rotation, 'XYZ')
         );
         q.premultiply(rot);
       }
@@ -171,7 +168,7 @@ const Cylinder: React.FunctionComponent<CylinderProps> = function Cylinder({
         1, // height at scale 1
         radialSegments,
         heightSegments,
-        openEnded
+        openEnded,
       ];
     },
     [radiusTop, radiusBottom, radialSegments, heightSegments, openEnded]
@@ -181,7 +178,7 @@ const Cylinder: React.FunctionComponent<CylinderProps> = function Cylinder({
   const geometry = useMemo(
     function initGeometry() {
       // @ts-ignore:T2345 // spread
-      return new THREE.CylinderBufferGeometry(...cylinderArgs);
+      return new THREE.CylinderGeometry(...cylinderArgs);
     },
     [cylinderArgs]
   );
@@ -200,20 +197,6 @@ const Cylinder: React.FunctionComponent<CylinderProps> = function Cylinder({
   );
 };
 
-// -----  PropTypes   ----- //
-Cylinder.propTypes = exact({
-  start: propTypeNumberArrayOfLength(3),
-  end: propTypeNumberArrayOfLength(3),
-  radius: PropTypes.number,
-  radiusTop: PropTypes.number,
-  radiusBottom: PropTypes.number,
-  height: PropTypes.number,
-  radialSegments: PropTypes.number,
-  heightSegments: PropTypes.number,
-  openEnded: PropTypes.bool,
-  ...MeshPropTypes
-});
-
 const CylinderMemo = memo(Cylinder);
-CylinderMemo.displayName = "Cylinder";
+CylinderMemo.displayName = 'Cylinder';
 export default CylinderMemo;

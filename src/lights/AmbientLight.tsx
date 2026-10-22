@@ -1,8 +1,6 @@
 // AmbientalLight.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 
 const { useMemo, memo } = React;
 
@@ -21,14 +19,11 @@ const AmbientLight: React.FunctionComponent<
     [color]
   );
 
-  return <ambientLight color={_color} intensity={intensity} {...otherProps} />;
+  return (
+    // @ts-ignore: Property 'ambientLight' does not exist on type 'JSX.IntrinsicElements'
+    <ambientLight color={_color} intensity={intensity} {...otherProps} />
+  );
 };
-
-// -----  PropTypes   ----- //
-AmbientLight.propTypes = exact({
-  color: PropTypes.string,
-  intensity: PropTypes.number
-});
 
 const AmbientLightMemo = memo(AmbientLight);
 AmbientLightMemo.displayName = "AmbientLight";

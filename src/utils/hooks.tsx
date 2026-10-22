@@ -7,7 +7,7 @@ import {
   useRef,
   useEffect
 } from "react";
-import { useFrame as r3rUseFrame, RenderCallback } from "react-three-fiber";
+import { useFrame as r3rUseFrame, RenderCallback } from "@react-three/fiber";
 import { ViewContext } from "../views/ViewContext";
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -68,7 +68,7 @@ export function useViewContext(): any {
 export const useAnimationFrame = (callback, dependencies?: any[]): void => {
   // Use useRef for mutable variables that we want to persist
   // without triggering a re-render on their change
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | undefined>(undefined);
 
   function animate(): void {
     callback();

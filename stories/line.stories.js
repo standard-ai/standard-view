@@ -1,14 +1,17 @@
 // line.stories.js
-import { storiesOf } from "@storybook/react";
-import { withKnobs } from "@storybook/addon-knobs";
 
 // Line Stories
-import LineStory from "./lines/line.js";
-import BoundingBoxStory from "./lines/bounding-box.js";
+import { default as BoundingBox } from './lines/bounding-box';
+export { default as Line } from './lines/line';
 
-const stories = storiesOf("Lines", module);
-stories.addDecorator(withKnobs);
+// Default export for Storybook
+export default {
+  title: 'Lines',
+};
 
-// Line Stories
-stories.add("Line", LineStory);
-stories.add("BoundingBox", BoundingBoxStory);
+export const BoundingBoxStory = {
+  render: BoundingBox,
+  name: 'Bounding Box',
+  args: BoundingBox.args,
+  argTypes: BoundingBox.argTypes,
+};

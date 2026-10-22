@@ -1,9 +1,9 @@
 // SetBackground.tsx
-import * as React from "react";
-import * as THREE from "three";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
-import { PMREMGenerator } from "three/src/extras/PMREMGenerator";
-import { useViewContext } from "../utils";
+import * as React from 'react';
+import * as THREE from 'three';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { PMREMGenerator } from 'three';
+import { useViewContext } from '../utils';
 
 const { useEffect, memo } = React;
 
@@ -11,58 +11,67 @@ function SetBackground({
   backgroundColor,
   backgroundTextureURL,
   backgroundEquirectangularTextureURL,
-  backgroundEquirectangularRGBEURL
+  backgroundEquirectangularRGBEURL,
 }): null {
   const { gl, scene, setViewContext } = useViewContext();
-  const pmremGenerator = new PMREMGenerator(gl);
-  pmremGenerator.compileEquirectangularShader();
 
   useEffect(
     function updateBackground() {
-      if (backgroundEquirectangularRGBEURL != null) {
+      const pmremGenerator = new PMREMGenerator(gl);
+      pmremGenerator.compileEquirectangularShader();
+
+      if (backgroundEquirectangularRGBEURL) {
+        // HDR
         // RGBE Equirectangular Skybox
         const path = backgroundEquirectangularRGBEURL;
 
-        const rgbeLoader = new RGBELoader();
-        rgbeLoader.setDataType(THREE.UnsignedByteType).load(path, texture => {
-          const options = {
-            minFilter: texture.minFilter,
-            magFilter: texture.magFilter
-          };
-          scene.background = new THREE.WebGLCubeRenderTarget(
-            2048,
-            options
-          ).fromEquirectangularTexture(gl, texture);
+        new RGBELoader().setDataType(THREE.FloatType).load(path, texture => {
+          // Mark as equirectangular
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+          // For HDR normally keep colorSpace as Linear
+          texture.colorSpace = THREE.LinearSRGBColorSpace;
+          scene.background = texture;
+
           // Using Prefiltered Mipmapped Radiance Environment Map for much smoother envmaps
           const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+
+          scene.environment = envMap;
           setViewContext({ envMap });
+
+          texture.dispose();
           pmremGenerator.dispose();
         });
-      } else if (backgroundEquirectangularTextureURL != null) {
+      } else if (backgroundEquirectangularTextureURL) {
+        // LDR
         // Equirectangular Skybox
         const path = backgroundEquirectangularTextureURL;
 
-        const textureLoader = new THREE.TextureLoader();
-        textureLoader.load(path, texture => {
-          const options = {
-            minFilter: THREE.LinearFilter,
-            magFilter: THREE.LinearFilter
-          };
-          scene.background = new THREE.WebGLCubeRenderTarget(
-            2048,
-            options
-          ).fromEquirectangularTexture(gl, texture);
+        new THREE.TextureLoader().load(path, texture => {
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+          texture.colorSpace = THREE.SRGBColorSpace;
+          scene.background = texture;
+
           const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+
+          scene.environment = envMap;
           setViewContext({ envMap });
+
+          texture.dispose();
           pmremGenerator.dispose();
         });
-      } else if (backgroundTextureURL != null) {
+      } else if (backgroundTextureURL) {
+        // 2D Background
         // Background Image
         const path = backgroundTextureURL;
-        scene.background = new THREE.TextureLoader().load(path);
+        new THREE.TextureLoader().load(path, texture => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          scene.background = texture;
+        });
       } else if (backgroundColor != null) {
+        // Solid Color
         // Background Color
         gl.setClearColor(backgroundColor);
+        scene.background = null;
       }
     },
     // setViewContext causes useState to update setViewContexValue
@@ -75,7 +84,7 @@ function SetBackground({
       backgroundEquirectangularRGBEURL,
       backgroundEquirectangularTextureURL,
       backgroundTextureURL,
-      backgroundColor
+      backgroundColor,
     ]
   );
 
@@ -83,5 +92,5 @@ function SetBackground({
 }
 
 const SetBackgroundMemo = memo(SetBackground);
-SetBackgroundMemo.displayName = "SetBackground";
+SetBackgroundMemo.displayName = 'SetBackground';
 export default SetBackgroundMemo;

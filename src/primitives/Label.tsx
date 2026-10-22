@@ -1,10 +1,8 @@
 // Label.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import Plane from "./Plane";
-import { MeshProps, MeshPropTypes } from "./Mesh";
+import { MeshProps } from "./Mesh";
 import { nextPowerOfTwo, EPS } from "../utils/math";
 import {
   getAlignmentOffset,
@@ -151,11 +149,11 @@ const Label: React.FunctionComponent<LabelProps> = function Label({
   );
 
   // Label Geometry
-  const labelGeometry = useRef(new THREE.PlaneBufferGeometry());
+  const labelGeometry = useRef(new THREE.PlaneGeometry());
 
   // Align
   const prevAspect = useRef(1);
-  const prevAlign = useRef(Label.defaultProps.align);
+  const prevAlign = useRef("center");
   useEffect(
     function updateAlign() {
       // Align
@@ -200,27 +198,7 @@ const Label: React.FunctionComponent<LabelProps> = function Label({
   );
 };
 
-// -----  Default Props   ----- //
-Label.defaultProps = {
-  align: "center"
-};
 
-// -----  PropTypes   ----- //
-Label.propTypes = exact({
-  text: PropTypes.string,
-  fontName: PropTypes.string,
-  fontStyle: PropTypes.string,
-  backgroundColor: PropTypes.string,
-  noBackground: PropTypes.bool,
-  borderColor: PropTypes.string,
-  borderThickness: PropTypes.number,
-  noBorder: PropTypes.bool,
-  textColor: PropTypes.string,
-  resolution: PropTypes.number,
-  align: PropTypes.string,
-  billboard: PropTypes.bool,
-  ...MeshPropTypes
-});
 
 const LabelMemo = memo(Label);
 LabelMemo.displayName = "Label";

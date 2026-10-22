@@ -1,9 +1,7 @@
 // Polygon.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Mesh, { MeshProps, MeshPropTypes } from "./Mesh";
+import Mesh, { MeshProps } from "./Mesh";
 
 const { memo } = React;
 
@@ -62,7 +60,7 @@ const Polygon: React.FunctionComponent<PolygonProps> = function Polygon({
   // Extrude Buffer Geometry
   const geometry = React.useMemo(
     function initGeometry() {
-      return new THREE.ExtrudeBufferGeometry(shape, options);
+      return new THREE.ExtrudeGeometry(shape, options);
     },
     [shape, options]
   );
@@ -74,12 +72,7 @@ const Polygon: React.FunctionComponent<PolygonProps> = function Polygon({
   );
 };
 
-// -----  PropTypes   ----- //
-Polygon.propTypes = exact({
-  points: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  depth: PropTypes.number,
-  ...MeshPropTypes
-});
+
 
 const PolygonMemo = memo(Polygon);
 PolygonMemo.displayName = "Polygon";

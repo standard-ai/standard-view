@@ -1,15 +1,24 @@
 // events.stories.js
-import { withKnobs } from "@storybook/addon-knobs";
-import { storiesOf } from "@storybook/react";
 
 // Events Stories
-import MouseEvents from "./events/mouse-events";
-import GroupEvents from "./events/group-events";
+import { default as MouseEvents } from './events/mouse-events';
+import { default as GroupEvents } from './events/group-events';
 
-const stories = storiesOf("Events", module);
+// Default export for Storybook
+export default {
+  title: 'Events',
+};
 
-stories.addDecorator(withKnobs);
+export const MouseEventsStory = {
+  render: MouseEvents,
+  name: 'Mouse Events',
+  args: MouseEvents.args,
+  argTypes: MouseEvents.argTypes,
+};
 
-// Events Stories
-stories.add("Mouse Events", MouseEvents);
-stories.add("Group Events", GroupEvents);
+export const GroupEventsStory = {
+  render: GroupEvents,
+  name: 'Group Events',
+  args: GroupEvents.args,
+  argTypes: GroupEvents.argTypes,
+};

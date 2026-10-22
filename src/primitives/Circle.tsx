@@ -1,9 +1,7 @@
 // Circle.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Mesh, { MeshProps, MeshPropTypes } from "./Mesh";
+import Mesh, { MeshProps } from "./Mesh";
 import { EPS } from "../utils/math";
 
 const { useMemo, memo } = React;
@@ -68,7 +66,7 @@ const Circle: React.FunctionComponent<CircleProps> = function Circle({
   // Circle Buffer Geometry
   const geometry = useMemo(
     function initGeometry() {
-      return new THREE.CircleBufferGeometry(...circleArgs);
+      return new THREE.CircleGeometry(...circleArgs);
     },
     [circleArgs]
   );
@@ -79,16 +77,6 @@ const Circle: React.FunctionComponent<CircleProps> = function Circle({
     </Mesh>
   );
 };
-
-// -----  PropTypes   ----- //
-Circle.propTypes = exact({
-  radius: PropTypes.number,
-  segments: PropTypes.number,
-  thetaStart: PropTypes.number,
-  thetaLength: PropTypes.number,
-  side: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  ...MeshPropTypes
-});
 
 const CircleMemo = memo(Circle);
 CircleMemo.displayName = "Circle";

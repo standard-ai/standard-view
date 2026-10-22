@@ -1,10 +1,8 @@
 // BoundingBox.tsx
 import * as React from "react";
 import * as THREE from "three";
-import exact from "prop-types-exact";
-import Group, { GroupProps, GroupPropTypes, generateGroupProps } from "./Group";
-import Line, { LineProps, LinePropTypes } from "../primitives/Line";
-import { propTypeNumberArrayOfLength } from "../utils/util";
+import Group, { GroupProps, generateGroupProps } from "./Group";
+import Line, { LineProps } from "../primitives/Line";
 import { EPS } from "../utils/math";
 
 const { useMemo, memo } = React;
@@ -127,14 +125,6 @@ const BoundingBox: React.FunctionComponent<
     </Group>
   );
 };
-
-// -----  PropTypes   ----- //
-BoundingBox.propTypes = exact({
-  min: propTypeNumberArrayOfLength(3),
-  max: propTypeNumberArrayOfLength(3),
-  ...LinePropTypes,
-  ...GroupPropTypes
-});
 
 const BoundingBoxMemo = memo(BoundingBox);
 BoundingBoxMemo.displayName = "BoundingBox";

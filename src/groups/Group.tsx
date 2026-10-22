@@ -1,8 +1,6 @@
 // Group.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import {
   DEFAULT_NORMAL_VEC3,
   DEFAULT_NORMAL,
@@ -15,7 +13,6 @@ import {
   checkPropagation,
   AnimationComponent
 } from "../utils/events";
-import { GeometryPropTypes } from "../utils/interfaces";
 import { toQuaternion } from "../utils/util";
 
 const {
@@ -52,6 +49,8 @@ export interface GroupProps {
   wireframe?: boolean;
   visible?: boolean;
   side?: string | THREE.Side;
+  depthWrite?: boolean;
+  depthTest?: boolean;
   // ShadowProps
   castShadow?: boolean;
   receiveShadow?: boolean;
@@ -86,7 +85,7 @@ export interface GroupProps {
 /**
  * Group
  *
- * In Standard View, Group is a wrapper of react-three-fiber/three.js's group.
+ * In Standard View, Group is a wrapper of @react-three/fiber/three.js's group.
  * This component allows composing children components into one large
  * manipulatable mesh-like component. This is useful for creating 3D assets
  * comprised of many pieces and then perform transformations and animations
@@ -238,7 +237,7 @@ const Group: React.FunctionComponent<GroupProps> = forwardRef<
   );
 
   // Ref
-  const groupRef = useRef(); // Hooks must be deterministic
+  const groupRef = useRef<THREE.Group | null>(null); // Hooks must be deterministic
   const group = ref || groupRef;
 
   // State
@@ -500,52 +499,6 @@ const Group: React.FunctionComponent<GroupProps> = forwardRef<
     </group>
   );
 });
-
-// -----  PropTypes   ----- //
-/* eslint-disable react/forbid-prop-types */
-Group.propTypes = exact({
-  // Geometry
-  ...GeometryPropTypes,
-  // Material
-  view3DEnvMap: PropTypes.bool,
-  materialType: PropTypes.string,
-  // materialProps
-  visible: PropTypes.bool,
-  color: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  hoverColor: PropTypes.string,
-  opacity: PropTypes.number,
-  transparent: PropTypes.bool,
-  wireframe: PropTypes.bool,
-  side: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  // Shadow
-  castShadow: PropTypes.bool,
-  receiveShadow: PropTypes.bool,
-  // Group
-  groupMember: PropTypes.bool,
-  // Animation
-  animation: PropTypes.func,
-  // State
-  state: PropTypes.object,
-  // Events
-  onClick: PropTypes.func,
-  onDoubleClick: PropTypes.func,
-  onWheel: PropTypes.func,
-  onPointerUp: PropTypes.func,
-  onPointerDown: PropTypes.func,
-  onPointerMove: PropTypes.func,
-  onPointerOver: PropTypes.func,
-  onPointerOut: PropTypes.func,
-  hoverable: PropTypes.bool,
-  mousePropagation: PropTypes.bool,
-  clickSensitivity: PropTypes.number,
-  ignoreMouseEvents: PropTypes.bool,
-  // Children
-  children: PropTypes.any
-});
-/* eslint-enable react/forbid-prop-types */
-
-/* eslint-disable-next-line react/forbid-foreign-prop-types */
-export const GroupPropTypes = Group.propTypes;
 
 const GroupMemo = memo(Group);
 GroupMemo.displayName = "Group";

@@ -1,35 +1,35 @@
 // Text.tsx
-import * as React from "react";
-import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Mesh, { MeshProps, MeshPropTypes } from "./Mesh";
+import * as React from 'react';
+import * as THREE from 'three';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
+import Mesh, { MeshProps } from './Mesh';
 import {
   getAlignmentOffset,
-  billboard as billboardAnimation
-} from "../utils/util";
-import { useToggle } from "../utils/hooks";
+  billboard as billboardAnimation,
+} from '../utils/util';
+import { useToggle } from '../utils/hooks';
 
 const { useRef, useEffect, useMemo, memo } = React;
 
 // Available Fonts
 const FONT_SOURCE =
-  "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/";
+  'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/';
 const FONTS = {
   helvetiker: {
-    name: "helvetiker_regular",
+    name: 'helvetiker_regular',
     typeface: null,
-    threeFont: null
+    threeFont: null,
   },
   helvetikerBold: {
-    name: "helvetiker_bold",
+    name: 'helvetiker_bold',
     typeface: null,
-    threeFont: null
+    threeFont: null,
   },
-  optimer: { name: "optimer_regular", typeface: null, threeFont: null },
-  optimerBold: { name: "optimer_bold", typeface: null, threeFont: null },
-  gentilis: { name: "gentilis_regular", typeface: null, threeFont: null },
-  gentilisBold: { name: "gentilis_bold", typeface: null, threeFont: null }
+  optimer: { name: 'optimer_regular', typeface: null, threeFont: null },
+  optimerBold: { name: 'optimer_bold', typeface: null, threeFont: null },
+  gentilis: { name: 'gentilis_regular', typeface: null, threeFont: null },
+  gentilisBold: { name: 'gentilis_bold', typeface: null, threeFont: null },
 };
 
 interface GetFontProps {
@@ -45,7 +45,7 @@ interface GetFontProps {
 async function getFont({
   url,
   cacheFont,
-  loadFont
+  loadFont,
 }: GetFontProps): Promise<void> {
   fetch(url)
     .then(res => res.json())
@@ -62,6 +62,7 @@ interface TextProps extends MeshProps {
   fontFile?: string;
   size?: number;
   height?: number;
+  depth?: number;
   align?: string;
   curveSegments?: number;
   bevelEnabled?: boolean;
@@ -76,7 +77,7 @@ interface TextProps extends MeshProps {
  * Text
  *
  * Text is also composed within a Mesh. The 3D text is actually a set
- * of extrusions handled by react-three-fiber/three.js's textGeometry.
+ * of extrusions handled by @react-three/fiber/three.js's textGeometry.
  * Materials are defaulted to meshBasicMaterials and accept the same
  * properties.
  *
@@ -93,12 +94,12 @@ interface TextProps extends MeshProps {
  * @param {TextProps} props
  */
 const Text: React.FunctionComponent<TextProps> = function Text({
-  text = "Text",
-  fontName = "helvetiker",
+  text = 'Text',
+  fontName = 'helvetiker',
   fontFile,
   size = 1,
-  height = 0.01,
-  align = "bottom-left",
+  depth = 0.01,
+  align = 'bottom-left',
   curveSegments = 12,
   bevelEnabled = false,
   bevelThickness = 10,
@@ -109,6 +110,13 @@ const Text: React.FunctionComponent<TextProps> = function Text({
   children,
   ...otherProps
 }) {
+  // height is deprecated, using depth instead
+  const { height } = otherProps;
+  if (height) {
+    console.warn('[Text] height is deprecated, using depth instead');
+    depth = height;
+  }
+
   // Loaded Flag
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const [_, loadFont] = useToggle(false);
@@ -117,7 +125,7 @@ const Text: React.FunctionComponent<TextProps> = function Text({
   const _fontName = useMemo(
     function updateFontName() {
       // Default Font Name
-      let name = "helvetiker";
+      let name = 'helvetiker';
 
       if (fontFile) {
         // Font File
@@ -166,7 +174,7 @@ const Text: React.FunctionComponent<TextProps> = function Text({
       }
 
       // Generate and cache threeFont
-      FONTS[_fontName].threeFont = new THREE.Font(FONTS[_fontName].typeface);
+      FONTS[_fontName].threeFont = new Font(FONTS[_fontName].typeface);
       return FONTS[_fontName].threeFont;
     },
     [_loaded, _fontName]
@@ -184,18 +192,18 @@ const Text: React.FunctionComponent<TextProps> = function Text({
       const fontParams = {
         font,
         size,
-        height,
+        depth,
         curveSegments,
         bevelEnabled,
         bevelThickness,
         bevelSize,
         bevelOffset,
-        bevelSegments
+        bevelSegments,
       };
 
       // TextBufferGeometry cannot be modified after instantiation
       // Must be recreated
-      const geometry = new THREE.TextBufferGeometry(text, fontParams);
+      const geometry = new TextGeometry(text, fontParams);
       geometry.computeBoundingBox();
 
       // Reset Alignment
@@ -206,7 +214,7 @@ const Text: React.FunctionComponent<TextProps> = function Text({
       const diagonal = [diagonalVec.x, diagonalVec.y, diagonalVec.z];
 
       const alignmentOffset = getAlignmentOffset(
-        Text.defaultProps.align,
+        'bottom-left',
         prevAlign.current,
         diagonal
       );
@@ -221,13 +229,13 @@ const Text: React.FunctionComponent<TextProps> = function Text({
       text,
       font,
       size,
-      height,
+      depth,
       curveSegments,
       bevelEnabled,
       bevelThickness,
       bevelSize,
       bevelOffset,
-      bevelSegments
+      bevelSegments,
     ]
   );
 
@@ -272,29 +280,6 @@ const Text: React.FunctionComponent<TextProps> = function Text({
   );
 };
 
-// -----  Default Props   ----- //
-Text.defaultProps = {
-  align: "bottom-left"
-};
-
-// -----  PropTypes   ----- //
-Text.propTypes = exact({
-  text: PropTypes.string,
-  fontName: PropTypes.string,
-  fontFile: PropTypes.string,
-  size: PropTypes.number,
-  height: PropTypes.number,
-  align: PropTypes.string,
-  curveSegments: PropTypes.number,
-  bevelEnabled: PropTypes.bool,
-  bevelThickness: PropTypes.number,
-  bevelSize: PropTypes.number,
-  bevelOffset: PropTypes.number,
-  bevelSegments: PropTypes.number,
-  billboard: PropTypes.bool,
-  ...MeshPropTypes
-});
-
 const TextMemo = memo(Text);
-TextMemo.displayName = "Text";
+TextMemo.displayName = 'Text';
 export default TextMemo;

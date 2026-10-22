@@ -1,8 +1,7 @@
 // Box.tsx
 import * as React from "react";
 import * as THREE from "three";
-import exact from "prop-types-exact";
-import Mesh, { MeshProps, MeshPropTypes } from "./Mesh";
+import Mesh, { MeshProps } from "./Mesh";
 
 const { useMemo, memo } = React;
 
@@ -23,7 +22,7 @@ const Box: React.FunctionComponent<BoxProps> = function Box({
 }) {
   // Box Buffer Geometry
   const geometry = useMemo(function initGeometry() {
-    return new THREE.BoxBufferGeometry(1, 1, 1);
+    return new THREE.BoxGeometry(1, 1, 1);
   }, []);
 
   return (
@@ -33,10 +32,7 @@ const Box: React.FunctionComponent<BoxProps> = function Box({
   );
 };
 
-// -----  PropTypes   ----- //
-Box.propTypes = exact({
-  ...MeshPropTypes
-});
+
 
 const BoxMemo = memo(Box);
 BoxMemo.displayName = "Box";

@@ -1,9 +1,7 @@
 // Plane.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Mesh, { MeshProps, MeshPropTypes } from "./Mesh";
+import Mesh, { MeshProps } from "./Mesh";
 import { billboard as billboardAnimation } from "../utils/util";
 
 const { useMemo, memo } = React;
@@ -29,7 +27,7 @@ const Plane: React.FunctionComponent<PlaneProps> = function Plane({
 }) {
   // Plane Buffer Geometry
   const geometry = useMemo(function initGeometry() {
-    return new THREE.PlaneBufferGeometry(1, 1, 1);
+    return new THREE.PlaneGeometry(1, 1, 1);
   }, []);
 
   return (
@@ -44,11 +42,7 @@ const Plane: React.FunctionComponent<PlaneProps> = function Plane({
   );
 };
 
-// -----  PropTypes   ----- //
-Plane.propTypes = exact({
-  billboard: PropTypes.bool,
-  ...MeshPropTypes
-});
+
 
 const PlaneMemo = memo(Plane);
 PlaneMemo.displayName = "Plane";

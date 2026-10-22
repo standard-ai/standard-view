@@ -1,29 +1,17 @@
 // group.stories.js
-import { storiesOf } from "@storybook/react";
-import { withKnobs } from "@storybook/addon-knobs";
 
 // Group Stories
-import AxisStory from "./groups/axis";
-import ArrowStory from "./groups/arrow";
-import Camera from "./groups/camera";
-import CapsuleStory from "./groups/capsule";
-import FBXStory from "./groups/fbx";
-import OBJStory from "./groups/obj";
-import GLTFStory from "./groups/gltf";
-import PCDStory from "./groups/pcd";
-import PathStory from "./groups/path";
+export { default as Axis } from './groups/axis';
+export { default as Arrow } from './groups/arrow';
+export { default as Camera } from './groups/camera';
+export { default as Capsule } from './groups/capsule';
+export { default as FBX } from './groups/fbx';
+export { default as OBJ } from './groups/obj';
+export { default as GLTF } from './groups/gltf';
+export { default as PCD } from './groups/pcd';
+export { default as Path } from './groups/path';
 
-const stories = storiesOf("Groups", module);
-stories.addDecorator(withKnobs);
-const storySettings = { knobs: { timestamps: true, escapeHTML: true } };
-
-// Group Stories
-stories.add("Axis", AxisStory, storySettings);
-stories.add("Arrow", ArrowStory, storySettings);
-stories.add("Camera", Camera);
-stories.add("Capsule", CapsuleStory, storySettings);
-stories.add("FBX", FBXStory, storySettings);
-stories.add("OBJ", OBJStory, storySettings);
-stories.add("GLTF", GLTFStory, storySettings);
-stories.add("PCD", PCDStory, storySettings);
-stories.add("Path", PathStory, storySettings);
+// Default export for Storybook
+export default {
+  title: 'Groups',
+};

@@ -1,10 +1,8 @@
 // Path.tsx
 import * as React from "react";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Group, { GroupProps, GroupPropTypes, generateGroupProps } from "./Group";
+import Group, { GroupProps, generateGroupProps } from "./Group";
 import { Sphere, Cylinder, Text } from "../primitives";
-import { areArraysEqual, propTypeNumberArrayOfLength } from "../utils/util";
+import { areArraysEqual } from "../utils/util";
 
 const { useRef, useMemo, memo } = React;
 
@@ -216,26 +214,6 @@ const Path: React.FunctionComponent<PathProps> = function Path({
     </Group>
   );
 };
-
-// -----  PropTypes   ----- //
-/* eslint-disable react/forbid-prop-types */
-Path.propTypes = exact({
-  points: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  frames: PropTypes.arrayOf(PropTypes.number),
-  thickness: PropTypes.number,
-  lineThickness: PropTypes.number,
-  pointRadius: PropTypes.number,
-  pointColor: PropTypes.string,
-  lineColor: PropTypes.string,
-  frame: PropTypes.number,
-  point: propTypeNumberArrayOfLength(3),
-  lineProps: PropTypes.any,
-  pointProps: PropTypes.any,
-  textProps: PropTypes.any,
-  enumerate: PropTypes.bool,
-  ...GroupPropTypes
-});
-/* eslint-enable react/forbid-prop-types */
 
 const PathMemo = memo(Path);
 PathMemo.displayName = "Path";

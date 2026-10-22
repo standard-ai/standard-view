@@ -11,7 +11,6 @@
     // "allowJs": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "jsx": "react",
     "moduleResolution": "node",
     // "noEmit": true,
     "strict": true,
@@ -25,11 +24,12 @@
     "noImplicitAny": false,
     "importHelpers": true,
     "strictNullChecks": true,
-    "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+
   },
-  "include": ["src"],
+  "include": ["src", "src/types"],
   "exclude": [
     "node_modules",
     "build",

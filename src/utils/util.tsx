@@ -1,10 +1,8 @@
 // util.ts
-import * as THREE from "three";
-import React, { memo, useRef, useEffect } from "react";
-import PropTypes from "prop-types";
-import Stats from "stats.js";
-import { useAnimationFrame } from "./hooks";
-import { ANCHORS, ANCHOR_SYNONYMS } from "./constants";
+import * as THREE from 'three';
+import { memo } from 'react';
+import { Stats } from '@react-three/drei';
+import { ANCHORS, ANCHOR_SYNONYMS } from './constants';
 
 /**
  * getAlignmentOffset
@@ -59,6 +57,11 @@ export function reconcileSynonymousProps(
   correctType: string,
   opposite = false
 ): void {
+  // Ensure props is an object
+  if (!props || typeof props !== 'object') {
+    return;
+  }
+
   synonymousProps.map(propNames => {
     const correctName = propNames[correctType];
     const synnonyms: string[] = Object.values(propNames).filter(
@@ -104,35 +107,19 @@ export function areArraysEqual(array1, array2): boolean {
  * FPS
  */
 export const FPS = memo(function FPS() {
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  const ref: React.RefObject<any> = useRef();
-  const s = new Stats();
-
-  useEffect(() => {
-    s.showPanel(0);
-    ref.current.appendChild(s.dom);
-  });
-
-  useAnimationFrame(() => {
-    s.begin();
-    s.end();
-  }, [ref, s]);
-
-  return (
-    <>
-      <div ref={ref} />
-    </>
-  );
+  return <Stats showPanel={0} className="fps-stats" />;
 });
 
-FPS.displayName = "FPS";
+FPS.displayName = 'FPS';
 
 /**
  * RGBStringToNumber
  */
-export function RGBStringToNumber(
-  rgbString
-): { r: number; g: number; b: number } {
+export function RGBStringToNumber(rgbString): {
+  r: number;
+  g: number;
+  b: number;
+} {
   let [, r, g, b] = rgbString.split(/[,()]/);
   r = parseInt(r, 10);
   g = parseInt(g, 10);
@@ -153,7 +140,7 @@ export function numberToRGBString(r, g, b): string {
  * default is [0, 0, 0]
  * default is array of all zeros for custom order with more than 3 components
  */
-export function objectToArray(obj, order = "xyz"): Array<number> {
+export function objectToArray(obj, order = 'xyz'): Array<number> {
   // Object is an Array
   if (Array.isArray(obj)) {
     return obj;
@@ -162,7 +149,7 @@ export function objectToArray(obj, order = "xyz"): Array<number> {
   // Convert object to array of numbers
   const array: Array<number> = [];
   /* eslint-disable no-restricted-syntax */
-  for (const component of order.split("")) {
+  for (const component of order.split('')) {
     // Object with any missing components yields default
     if (Number.isNaN(obj[component])) {
       return Array(order.length).fill(0);
@@ -182,13 +169,13 @@ export function objectToArray(obj, order = "xyz"): Array<number> {
  * default is an object with all zero value components for custom order
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function arrayToObject(array, order = "xyz"): any {
+export function arrayToObject(array, order = 'xyz'): any {
   const obj: any = {};
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
   // Not an Array or does not have enough elements
   if (!Array.isArray(array) || array.length < order.length) {
-    order.split("").map(component => {
+    order.split('').map(component => {
       obj[component] = 0;
 
       return null;
@@ -198,7 +185,7 @@ export function arrayToObject(array, order = "xyz"): any {
   }
 
   // Convert array to object
-  order.split("").map((component, index) => {
+  order.split('').map((component, index) => {
     obj[component] = array[index];
 
     return null;
@@ -210,18 +197,18 @@ export function arrayToObject(array, order = "xyz"): any {
  * arrayToQuaternion
  * return THREE.Quaternion if already THREE.Quaternion
  */
-export function toQuaternion(obj, order = "xyzw"): THREE.Quaternion {
+export function toQuaternion(obj, order = 'xyzw'): THREE.Quaternion {
   const quaternion = { x: 0, y: 0, z: 0, w: 1 };
 
   if (Array.isArray(obj) && obj.length === 4) {
     // Array
-    order.split("").map((component, i) => {
+    order.split('').map((component, i) => {
       quaternion[component] = obj[i];
       return null;
     });
   } else {
     // Object
-    order.split("").map(component => {
+    order.split('').map(component => {
       if (obj[component] == null) {
         console.warn(
           `[toQuaternion] argument does not have component: ${component}. Default Quaternion(0, 0, 0, 1) returned.`
@@ -260,55 +247,4 @@ export function billboard({ mesh, camera }): void {
   mesh.current.lookAt(camera.position);
   /* eslint-disable-next-line no-param-reassign */
   mesh.current.up = camera.up;
-}
-
-// -----   Custom PropTypes   ----- //
-/**
- * propTypeNumberArrayOfLength
- * Custom PropType Validation of Array<number> with specific length.
- */
-export function propTypeNumberArrayOfLength(length) {
-  return function customPropType(
-    props,
-    propName,
-    componentName,
-    location,
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    propFullName
-  ): Error | null {
-    /* eslint-disable-next-line react/destructuring-assignment */
-    if (!/matchme/.test(props[propName])) {
-      const prop = props[propName];
-
-      // No Prop
-      if (prop == null) {
-        return null;
-      }
-
-      // Array Check
-      if (!Array.isArray(prop)) {
-        return new Error(
-          `Invalid prop \`${propName}\` of type \`${typeof prop}\` supplied to \`${componentName}\`, expected an array of length ${length}.`
-        );
-      }
-
-      // Length Check
-      if (prop.length !== length) {
-        return new Error(
-          `Invalid prop \`${propName}\` of type \`${typeof prop}\` of length ${
-            prop.length
-          } supplied to \`${componentName}\`, expected an array of length ${length}.`
-        );
-      }
-
-      // Each Element Number Check
-      const checkTypes = {};
-      checkTypes[propName] = PropTypes.arrayOf(PropTypes.number);
-      const checkProps = {};
-      checkProps[propName] = prop;
-      PropTypes.checkPropTypes(checkTypes, checkProps, location, componentName);
-    }
-
-    return null;
-  };
 }

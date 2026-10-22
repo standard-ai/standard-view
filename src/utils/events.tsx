@@ -1,6 +1,6 @@
 // events.tsx
 import * as React from "react";
-import { RenderCallback } from "react-three-fiber";
+import { RenderCallback } from "@react-three/fiber";
 import { useAnimationFrame } from "./hooks";
 
 const { memo } = React;
@@ -89,7 +89,7 @@ interface AnimationComponentProps {
 /**
  * AnimationComponent
  *
- * Isolate react-three-fiber's useFrame hook to add animation
+ * Isolate @react-three/fiber's useFrame hook to add animation
  * function to three's render loop.
  */
 export const AnimationComponent = memo<AnimationComponentProps>(

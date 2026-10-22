@@ -1,31 +1,24 @@
 // Camera.tsx
-import * as React from "react";
-import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Box from "../primitives/Box";
-import Circle from "../primitives/Circle";
-import Cylinder from "../primitives/Cylinder";
-import Label from "../primitives/Label";
-import Arrow from "./Arrow";
-import Text from "../primitives/Text";
-import { MeshProps, MeshPropTypes } from "../primitives/Mesh";
-import Group from "./Group";
-import {
-  billboard,
-  propTypeNumberArrayOfLength,
-  toQuaternion,
-  objectToArray
-} from "../utils/util";
-import { EPS } from "../utils/math";
-import { useFrame } from "../utils/hooks";
+import * as React from 'react';
+import * as THREE from 'three';
+import Box from '../primitives/Box';
+import Circle from '../primitives/Circle';
+import Cylinder from '../primitives/Cylinder';
+import Label from '../primitives/Label';
+import Arrow from './Arrow';
+import Text from '../primitives/Text';
+import { MeshProps } from '../primitives/Mesh';
+import Group from './Group';
+import { billboard, toQuaternion, objectToArray } from '../utils/util';
+import { EPS } from '../utils/math';
+import { useFrame } from '../utils/hooks';
 import {
   DEFAULT_UP,
   DEFAULT_UP_VEC3,
   DEFAULT_NORMAL,
   DEFAULT_NORMAL_VEC3,
-  EULER_ORDERS
-} from "../utils/constants";
+  EULER_ORDERS,
+} from '../utils/constants';
 
 const { useMemo, memo } = React;
 
@@ -33,7 +26,7 @@ function updateAllOpacity({
   children,
   originalOpacity,
   newOpacity = 0.5,
-  restore = false
+  restore = false,
 }): void {
   // Validation
   if (!children) {
@@ -43,7 +36,7 @@ function updateAllOpacity({
 
   // Update Meshes
   _children
-    .filter(child => child.constructor.name === "")
+    .filter(child => child.constructor.name === '')
     .map(mesh => {
       /* eslint-disable no-param-reassign */
       if (restore) {
@@ -68,25 +61,25 @@ function updateAllOpacity({
 
   // Recurse into Groups
   _children
-    .filter(child => child.constructor.name === "Group")
+    .filter(child => child.constructor.name === 'Group')
     .map(group =>
       updateAllOpacity({
         children: group.children,
         originalOpacity,
         newOpacity,
-        restore
+        restore,
       })
     );
 
   // Recurse into Scenes
   _children
-    .filter(child => child.constructor.name === "Scene")
+    .filter(child => child.constructor.name === 'Scene')
     .map(scene =>
       updateAllOpacity({
         children: scene.children,
         originalOpacity,
         newOpacity,
-        restore
+        restore,
       })
     );
 }
@@ -106,7 +99,7 @@ function setAllOpacity(children, newOpacity): Function {
     children,
     originalOpacity,
     newOpacity,
-    restore: false
+    restore: false,
   });
   originalOpacity = originalOpacity.reverse();
 
@@ -117,7 +110,7 @@ function setAllOpacity(children, newOpacity): Function {
       children,
       originalOpacity,
       newOpacity,
-      restore: true
+      restore: true,
     });
   };
 }
@@ -151,7 +144,7 @@ function CullCoverage({ frustum, cull, coverageColor, coverageOpacity }): null {
       scene.overrideMaterial = new THREE.MeshBasicMaterial({
         color: coverageColor,
         transparent: true,
-        opacity: coverageOpacity
+        opacity: coverageOpacity,
       });
     }
 
@@ -206,7 +199,7 @@ interface CameraProps extends MeshProps {
  */
 const Camera: React.FunctionComponent<CameraProps> = function Camera({
   // THREE Camera Props
-  type = "perspective",
+  type = 'perspective',
   left,
   right,
   top,
@@ -233,7 +226,7 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
   showLookAt = false,
   showLabel = true,
   labelOffset = [0, 0, 1.5],
-  labelText = "cam",
+  labelText = 'cam',
   // Coverage
   cull = false,
   coverageColor,
@@ -252,10 +245,7 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
       if (target) {
         const posVec = new THREE.Vector3(...position);
         const targetVec = new THREE.Vector3(...target);
-        const lookAtVec = targetVec
-          .clone()
-          .sub(posVec)
-          .normalize();
+        const lookAtVec = targetVec.clone().sub(posVec).normalize();
         // LookAt is opposite direction of Normal
         return [-lookAtVec.x, -lookAtVec.y, -lookAtVec.z];
       }
@@ -269,32 +259,28 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
   const camera = useMemo(
     function updateCamera() {
       let cam;
-      if (camera) {
-        cam = camera;
-      } else {
-        const _left = left != null ? left : -width * 0.5;
-        const _right = right != null ? right : width * 0.5;
-        const _top = top != null ? top : height * 0.5;
-        const _bottom = bottom != null ? bottom : -height * 0.5;
+      const _left = left != null ? left : -width * 0.5;
+      const _right = right != null ? right : width * 0.5;
+      const _top = top != null ? top : height * 0.5;
+      const _bottom = bottom != null ? bottom : -height * 0.5;
 
-        switch (type) {
-          case "orthographic":
-            cam = new THREE.OrthographicCamera(
-              _left,
-              _right,
-              _top,
-              _bottom,
-              near,
-              far
-            );
-            break;
-          case "perspective":
-            cam = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            break;
-          default:
-            /* eslint-disable-next-line no-console */
-            console.warn(`[Camera] Invalid camera type: ${type}`);
-        }
+      switch (type) {
+        case 'orthographic':
+          cam = new THREE.OrthographicCamera(
+            _left,
+            _right,
+            _top,
+            _bottom,
+            near,
+            far
+          );
+          break;
+        case 'perspective':
+          cam = new THREE.PerspectiveCamera(fov, aspect, near, far);
+          break;
+        default:
+          /* eslint-disable-next-line no-console */
+          console.warn(`[Camera] Invalid camera type: ${type}`);
       }
 
       // Camera Extrinsics
@@ -356,9 +342,8 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
           lookAtVec,
           rightVec
         );
-        const trueUpVec = DEFAULT_UP_VEC3.clone().applyQuaternion(
-          qNormalAndRotation
-        );
+        const trueUpVec =
+          DEFAULT_UP_VEC3.clone().applyQuaternion(qNormalAndRotation);
         const upAlignSign = trueUpVec.clone().dot(rightVec) > 0 ? -1 : 1;
         upAlignAngle = trueUpVec.angleTo(projectedUpVec) * upAlignSign;
       }
@@ -397,7 +382,7 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
       fov,
       aspect,
       eulerOrder,
-      rotation
+      rotation,
     ]
   );
 
@@ -467,7 +452,7 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
           {/* Roll */}
           {/* Camera's Normal is inverse of LookAt */}
           {showRoll && (
-            <>
+            <Group>
               <Arrow head={DEFAULT_UP.map(val => val * 2)} color="yellow" />
               <Arrow
                 head={DEFAULT_UP.map(val => val * 2)}
@@ -490,7 +475,7 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
                 size={0.2}
                 billboard
               />
-            </>
+            </Group>
           )}
         </Group>
         {/* Wireframe */}
@@ -515,7 +500,7 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
         )}
         {/* Up */}
         {showUp && (
-          <>
+          <Group>
             <Arrow
               head={[camera.up.x * 2, camera.up.y * 2, camera.up.z * 2]}
               color="cyan"
@@ -525,18 +510,18 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
               position={[
                 camera.up.x * 2.2,
                 camera.up.y * 2.2,
-                camera.up.z * 2.2
+                camera.up.z * 2.2,
               ]}
               color="cyan"
               align="center"
               size={camera.up.length() * 0.2}
               billboard
             />
-          </>
+          </Group>
         )}
         {/* Normal */}
         {showNormal && (
-          <>
+          <Group>
             <Arrow head={cameraNormal.map(val => val * 2)} color="lime" />
             <Text
               text="normal"
@@ -546,11 +531,11 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
               size={0.2}
               billboard
             />
-          </>
+          </Group>
         )}
         {/* LookAt */}
         {showLookAt && (
-          <>
+          <Group>
             <Arrow head={cameraLookAt.map(val => val * 2)} color="magenta" />
             <Text
               text="look"
@@ -560,7 +545,7 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
               size={0.2}
               billboard
             />
-          </>
+          </Group>
         )}
         {/* Label */}
         {showLabel && (
@@ -575,7 +560,10 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
       </Group>
 
       {/* Helper */}
-      {helper && <primitive object={cameraHelper} />}
+      {helper && (
+        // @ts-ignore: Property 'primitive' does not exist on type 'JSX.IntrinsicElements'
+        <primitive object={cameraHelper} />
+      )}
 
       {/* Cull */}
       <CullCoverage
@@ -588,36 +576,6 @@ const Camera: React.FunctionComponent<CameraProps> = function Camera({
   );
 };
 
-// -----  PropTypes   ----- //
-Camera.propTypes = exact({
-  type: PropTypes.string,
-  width: PropTypes.number,
-  height: PropTypes.number,
-  left: PropTypes.number,
-  right: PropTypes.number,
-  top: PropTypes.number,
-  bottom: PropTypes.number,
-  near: PropTypes.number,
-  far: PropTypes.number,
-  fov: PropTypes.number,
-  aspect: PropTypes.number,
-  meshColor: PropTypes.string,
-  wireframeColor: PropTypes.string,
-  coverageColor: PropTypes.string,
-  coverageOpacity: PropTypes.number,
-  helper: PropTypes.bool,
-  showLabel: PropTypes.bool,
-  showUp: PropTypes.bool,
-  showNormal: PropTypes.bool,
-  showRoll: PropTypes.bool,
-  showLookAt: PropTypes.bool,
-  labelText: PropTypes.string,
-  labelOffset: propTypeNumberArrayOfLength(3),
-  target: propTypeNumberArrayOfLength(3),
-  cull: PropTypes.bool,
-  ...MeshPropTypes
-});
-
 const CameraMemo = memo(Camera);
-CameraMemo.displayName = "Camera";
+CameraMemo.displayName = 'Camera';
 export default CameraMemo;

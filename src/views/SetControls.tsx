@@ -1,25 +1,31 @@
 // SetControls.tsx
-import * as React from "react";
-import * as THREE from "three";
-import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
-import _ from "lodash";
-import { useFrame, useViewContext } from "../utils/hooks";
-import { OrbitControls, MapControls } from "../controls/OrbitControls";
+import * as React from 'react';
+import * as THREE from 'three';
+import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
+import { useFrame, useViewContext } from '../utils/hooks';
 import {
   CONTROLS_TYPES,
   DEFAULT_UP_VEC3,
-  DEFAULT_NORMAL_VEC3
-} from "../utils/constants";
-import { EPS } from "../utils/math";
+  DEFAULT_NORMAL_VEC3,
+} from '../utils/constants';
+import { EPS } from '../utils/math';
 
 const { useEffect, useState, useMemo, memo } = React;
+
+// Helper function for deep comparison
+const isEqual = (a: any, b: any): boolean => {
+  return JSON.stringify(a) === JSON.stringify(b);
+};
 
 function SetControls({
   controlsType,
   cameraExtrinsics,
+  cameraIntrinsics,
   polarAngle,
   azimuthAngle,
-  controlsProps
+  controlsProps,
 }): null {
   const { camera, gl } = useViewContext();
 
@@ -44,18 +50,53 @@ function SetControls({
   useEffect(
     function updateControlsProps() {
       // Update Controls Props
-      if (!_.isEqual(_controlsProps, controlsProps)) {
+      if (!isEqual(_controlsProps, controlsProps)) {
         setControlsProps(controlsProps);
       }
     },
     [controlsProps, _controlsProps]
   );
 
+  const [_cameraIntrinsics, setCameraIntrinsics] = useState(cameraIntrinsics);
+  useEffect(
+    function updateCameraIntrinsics() {
+      // Update Camera Intrinsics
+      if (!isEqual(_cameraIntrinsics, cameraIntrinsics)) {
+        setCameraIntrinsics(cameraIntrinsics);
+      }
+    },
+    [cameraIntrinsics, _cameraIntrinsics]
+  );
+
+  // @react-three/fiber applies the Canvas camera prop once, when it creates
+  // the camera, and ignores later changes; so fov, near, far, zoom and the
+  // orthographic bounds given to View3D after mount are applied here.
+  useEffect(
+    function applyCameraIntrinsics() {
+      if (!_cameraIntrinsics) {
+        return;
+      }
+
+      let changed = false;
+      Object.entries(_cameraIntrinsics).forEach(([key, value]) => {
+        if (value != null && typeof value !== 'object' && key in camera) {
+          camera[key] = value;
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        camera.updateProjectionMatrix();
+      }
+    },
+    [camera, _cameraIntrinsics]
+  );
+
   const [_cameraExtrinsics, setCameraExtrinsics] = useState(cameraExtrinsics);
   useEffect(
     function updateCameraExtrinsics() {
       // Update Camera Extrinsics
-      if (!_.isEqual(_cameraExtrinsics, cameraExtrinsics)) {
+      if (!isEqual(_cameraExtrinsics, cameraExtrinsics)) {
         setCameraExtrinsics(cameraExtrinsics);
       }
     },
@@ -108,12 +149,11 @@ function SetControls({
 
       // Initialize Camera Controls
       if (CameraControls != null) {
-        // @ts-ignore:TS2351 new
         camera.controls = new CameraControls(
+          // polarAngle,
+          // azimuthAngle,
           camera,
-          gl.domElement,
-          polarAngle,
-          azimuthAngle
+          gl.domElement
         );
         camera.controls.enabled = true;
       }
@@ -126,7 +166,7 @@ function SetControls({
       _cameraExtrinsics,
       polarAngle,
       azimuthAngle,
-      gl.domElement
+      gl.domElement,
     ]
   );
 
@@ -151,7 +191,7 @@ function SetControls({
 }
 
 const SetControlsMemo = memo(SetControls);
-SetControlsMemo.displayName = "SetControls";
+SetControlsMemo.displayName = 'SetControls';
 export default SetControlsMemo;
 
 /**
@@ -159,8 +199,8 @@ export default SetControlsMemo;
  *
  * Isolates the useFrame hook to avoid larger components, namely
  * SetControls, from re-rendering up to 3 times--this is a bug
- * from react-three-fiber.
- * Any react-three-fiber hook call incurs additional renders.
+ * from @react-three/fiber.
+ * Any @react-three/fiber hook call incurs additional renders.
  */
 export const UpdateControls = memo(function UpdateControls(): null {
   const { camera } = useViewContext();
@@ -173,4 +213,4 @@ export const UpdateControls = memo(function UpdateControls(): null {
 
   return null;
 });
-UpdateControls.displayName = "UpdateControls";
+UpdateControls.displayName = 'UpdateControls';

@@ -1,11 +1,8 @@
 // LightWithShadows.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import { useFrame, useViewContext } from "../utils/hooks";
 import { nextPowerOfTwo, EPS } from "../utils/math";
-import { propTypeNumberArrayOfLength } from "../utils/util";
 
 const { useEffect, useMemo, memo } = React;
 
@@ -26,21 +23,6 @@ export interface CommonLightWithShadowsProps {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   children?: any;
 }
-
-export const CommonLightWithShadowsPropTypes = {
-  position: propTypeNumberArrayOfLength(3),
-  target: propTypeNumberArrayOfLength(3),
-  color: PropTypes.string,
-  intensity: PropTypes.number,
-  castShadow: PropTypes.bool,
-  shadowCameraNear: PropTypes.number,
-  shadowCameraFar: PropTypes.number,
-  shadowMapWidth: PropTypes.number,
-  shadowMapHeight: PropTypes.number,
-  helper: PropTypes.bool,
-  helperColor: PropTypes.string,
-  helperSize: PropTypes.number
-};
 
 // -------------------------------- //
 // -----   LightWithShadows   ----- //
@@ -192,15 +174,6 @@ const LightWithShadows: React.FunctionComponent<
   );
 };
 
-// -----  PropTypes   ----- //
-LightWithShadows.propTypes = exact({
-  THREELight: PropTypes.func.isRequired, // THREE.Light -- specific
-  THREEHelper: PropTypes.func.isRequired, // THREE.LightHelper -- specific
-  lightParams: PropTypes.arrayOf(PropTypes.any).isRequired,
-  helperParams: PropTypes.arrayOf(PropTypes.any).isRequired,
-  ...CommonLightWithShadowsPropTypes
-});
-
 const LightWithShadowsMemo = memo(LightWithShadows);
 LightWithShadowsMemo.displayName = "LightWithShadows";
 export default LightWithShadowsMemo;
@@ -213,8 +186,8 @@ export default LightWithShadowsMemo;
  *
  * Isolates the useFrame hook to avoid larger components, namely
  * CreateLightHelper, from re-rendering up to 3 times--this is
- * a bug from react-three-fiber.
- * Any react-three-fiber hook call incurs additional renders.
+ * a bug from @react-three/fiber.
+ * Any @react-three/fiber hook call incurs additional renders.
  */
 function UpdateLightWithShadowsHelper({ helper, lightHelper }): null {
   useFrame(function updateHelper() {
@@ -257,14 +230,8 @@ const LightWithShadowsHelper: React.FunctionComponent<
   return (
     <>
       <UpdateLightWithShadowsHelper helper={helper} lightHelper={lightHelper} />
+      {/* @ts-ignore: Property 'primitive' does not exist on type 'JSX.IntrinsicElements' */}
       <primitive object={lightHelper} />
     </>
   );
-};
-
-// -----  PropTypes   ----- //
-LightWithShadowsHelper.propTypes = {
-  THREEHelper: PropTypes.func.isRequired,
-  helperParams: PropTypes.arrayOf(PropTypes.any).isRequired,
-  helper: PropTypes.bool.isRequired
 };

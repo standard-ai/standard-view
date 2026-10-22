@@ -1,11 +1,8 @@
 // PointLight.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import LightWithShadows, {
-  CommonLightWithShadowsProps,
-  CommonLightWithShadowsPropTypes
+  CommonLightWithShadowsProps
 } from "./LightWithShadows";
 
 const { useMemo, memo } = React;
@@ -51,13 +48,6 @@ const PointLight: React.FunctionComponent<
     />
   );
 };
-
-// -----  PropTypes   ----- //
-PointLight.propTypes = exact({
-  distance: PropTypes.number,
-  decay: PropTypes.number,
-  ...CommonLightWithShadowsPropTypes
-});
 
 const PointLightMemo = memo(PointLight);
 PointLightMemo.displayName = "PointLight";

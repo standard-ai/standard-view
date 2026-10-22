@@ -1,14 +1,11 @@
 // Arrow.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import Group from "./Group";
-import { MeshProps, MeshPropTypes } from "../primitives/Mesh";
+import { MeshProps } from "../primitives/Mesh";
 import Cylinder from "../primitives/Cylinder";
 import Sphere from "../primitives/Sphere";
 import { DEFAULT_NORMAL } from "../utils/constants";
-import { propTypeNumberArrayOfLength } from "../utils/util";
 import { minmax } from "../utils/math";
 
 const { useMemo, memo } = React;
@@ -135,21 +132,7 @@ const Arrow: React.FunctionComponent<ArrowProps> = function Arrow({
   );
 };
 
-// -----  PropTypes   ----- //
-Arrow.propTypes = exact({
-  tail: propTypeNumberArrayOfLength(3),
-  start: propTypeNumberArrayOfLength(3),
-  head: propTypeNumberArrayOfLength(3),
-  end: propTypeNumberArrayOfLength(3),
-  target: propTypeNumberArrayOfLength(3),
-  magnitude: PropTypes.number,
-  radius: PropTypes.number,
-  shaftRadius: PropTypes.number,
-  headBaseRadius: PropTypes.number,
-  headTipRadius: PropTypes.number,
-  headRatio: PropTypes.number,
-  ...MeshPropTypes
-});
+
 
 const ArrowMemo = memo(Arrow);
 ArrowMemo.displayName = "Arrow";

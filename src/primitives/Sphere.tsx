@@ -1,9 +1,7 @@
 // Sphere.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Mesh, { MeshPropTypes, MeshProps } from "./Mesh";
+import Mesh, { MeshProps } from "./Mesh";
 import { EPS } from "../utils/math";
 import { performanceStart, performanceEnd } from "../utils/performance";
 
@@ -94,7 +92,7 @@ const Sphere: React.FunctionComponent<SphereProps> = forwardRef<
   // Sphere Buffer Geometry
   const geometry = useMemo(
     function initGeometry() {
-      return new THREE.SphereBufferGeometry(...sphereArgs);
+      return new THREE.SphereGeometry(...sphereArgs);
     },
     [sphereArgs]
   );
@@ -111,17 +109,7 @@ const Sphere: React.FunctionComponent<SphereProps> = forwardRef<
   );
 });
 
-// -----  PropTypes   ----- //
-Sphere.propTypes = exact({
-  radius: PropTypes.number,
-  widthSegments: PropTypes.number,
-  heightSegments: PropTypes.number,
-  phiStart: PropTypes.number,
-  phiLength: PropTypes.number,
-  thetaStart: PropTypes.number,
-  thetaLength: PropTypes.number,
-  ...MeshPropTypes
-});
+
 
 const SphereMemo = memo(Sphere);
 SphereMemo.displayName = "Sphere";

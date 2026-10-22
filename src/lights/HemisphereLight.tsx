@@ -1,10 +1,7 @@
 // HemispherealLight.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import Sphere from "../primitives/Sphere";
-import { propTypeNumberArrayOfLength } from "../utils/util";
 
 const { useMemo, memo } = React;
 
@@ -17,7 +14,7 @@ interface HemispherealLightHelperProps {
 /**
  * HemisphereLightHelper
  *
- * react-three-fiber's reconciler switchInstance function for re-rendering
+ * @react-three/fiber's reconciler switchInstance function for re-rendering
  * components with new arguments, the order of execution is removeChild,
  * recursiveRemove, dispose, and delete. Since children are removed before
  * disposing a three.js object, if the dispose function references the
@@ -28,7 +25,7 @@ interface HemispherealLightHelperProps {
  *    this.children[0].material.dispose();
  * where this.children[0] is refering to the Octahedron that represents the
  * hemisphere light. Unfortunatley, three.js's poor choice of array
- * referencing and react-three-fiber's order of component removal causes
+ * referencing and @react-three/fiber's order of component removal causes
  * an array reference crash (since the children were recursively removed,
  * and only an empty array exists at the HemisphereLightHelper's dispose call).
  *
@@ -36,7 +33,7 @@ interface HemispherealLightHelperProps {
  * that light helper too.
  *
  * Ultimately, THREE.HemisphereLightHelper / hemisphereLightHelper cannot
- * safely re-render through react-three-fiber's reconciler.
+ * safely re-render through @react-three/fiber's reconciler.
  *
  * This is the custom HemisphereLightHelper.
  */
@@ -68,12 +65,6 @@ function HemisphereLightHelper({
     </>
   );
 }
-
-HemisphereLightHelper.propTypes = exact({
-  helperSize: PropTypes.number,
-  color: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  groundColor: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-});
 
 interface HemisphereLightProps {
   position?: Array<number>;
@@ -125,6 +116,7 @@ const HemisphereLight: React.FunctionComponent<
   );
 
   return (
+    // @ts-ignore: Property 'hemisphereLight' does not exist on type 'JSX.IntrinsicElements'
     <hemisphereLight
       color={_color}
       groundColor={_groundColor}
@@ -133,20 +125,10 @@ const HemisphereLight: React.FunctionComponent<
       {...otherProps}
     >
       {helper && <HemisphereLightHelper {...helperProps} />}
+    {/* @ts-ignore: Property 'hemisphereLight' does not exist on type 'JSX.IntrinsicElements' */}
     </hemisphereLight>
   );
 };
-
-// -----  PropTypes   ----- //
-HemisphereLight.propTypes = exact({
-  position: propTypeNumberArrayOfLength(3),
-  color: PropTypes.string,
-  skyColor: PropTypes.string,
-  groundColor: PropTypes.string,
-  intensity: PropTypes.number,
-  helper: PropTypes.bool,
-  helperSize: PropTypes.number
-});
 
 const HemisphereLightMemo = memo(HemisphereLight);
 HemisphereLightMemo.displayName = "HemisphereLight";

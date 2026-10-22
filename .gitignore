@@ -125,3 +125,6 @@ build
 
 # Netlify Lambda functions (which are built on Netlify)
 functions/*.zip
+
+# claude
+.claude/*

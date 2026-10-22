@@ -1,9 +1,7 @@
 // Quad.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import { MeshProps, MeshPropTypes } from "./Mesh";
+import { MeshProps } from "./Mesh";
 import Triangle from "./Triangle";
 import { EPS_NANO } from "../utils/math";
 
@@ -109,13 +107,7 @@ const Quad: React.FunctionComponent<QuadProps> = function Quad({
   );
 };
 
-// -----  PropTypes   ----- //
-Quad.propTypes = exact({
-  points: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  indices: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  coplanarThreshold: PropTypes.number,
-  ...MeshPropTypes
-});
+
 
 const QuadMemo = memo(Quad);
 QuadMemo.displayName = "Quad";

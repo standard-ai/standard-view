@@ -1,12 +1,9 @@
 // RectAreaLight.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import Plane from "../primitives/Plane";
 import Cylinder from "../primitives/Cylinder";
 import { EPS } from "../utils/math";
-import { propTypeNumberArrayOfLength } from "../utils/util";
 
 const { useEffect, useMemo, memo } = React;
 
@@ -21,7 +18,7 @@ interface RectAreaLightHelperProps {
 /**
  * RectAreaLightHelper
  *
- * During a re-render, react-three-fiber's reconciler executes a switchInstance
+ * During a re-render, @react-three/fiber's reconciler executes a switchInstance
  * function if a component has new arguments. This switchInstance basically creates
  * a newInstance with the new arguments and removes old instance.
  *
@@ -29,7 +26,7 @@ interface RectAreaLightHelperProps {
  * also invokes a removeRecursive function that also removes children of the child,
  * recursively. This ensures all nested children are removed.
  *
- * Unfortunately, react-three-fiber's removeChild function first removes the child,
+ * Unfortunately, @react-three/fiber's removeChild function first removes the child,
  * then recursively removes its children, and then checks if the child has a
  * dispose function and calls it--which allows for three.js cleanup code to execute
  * upon removal, and finally deletes the reference.
@@ -43,12 +40,12 @@ interface RectAreaLightHelperProps {
  * its geometry and material stored in variables of those names, but another Mesh (of
  * the quad) is stored as a child.
  *
- * Normally this is fine, since all children are recursively removed by react-three-fiber,
+ * Normally this is fine, since all children are recursively removed by @react-three/fiber,
  * but unfortunatley, RectAreaLightHelper's dispose function spefically calls:
  *    this.children[0].geometry.dispose()
  *    this.children[0].material.dispose()
  * refering to the quad mesh as `this.children[0]`. By the time RectAreaLightHelper's
- * dispose function is called, react-three-fiber has already recursively removed the
+ * dispose function is called, @react-three/fiber has already recursively removed the
  * children, hence this.childern is an empty array, resulting in an array reference crash.
  *
  * For other light helpers, the geometry and material are not stored in the children
@@ -60,7 +57,7 @@ interface RectAreaLightHelperProps {
  * and those helpers' dispose function does not reference any children.
  *
  * Therefore, THREE.RectAreaLightHelper / rectAreaLightHelper cannot safely re-render
- * through react-three-fiber's reconciler.
+ * through @react-three/fiber's reconciler.
  *
  * This is the custom RectAreaLightHelper.
  */
@@ -102,14 +99,6 @@ function RectAreaLightHelper({
     </>
   );
 }
-
-RectAreaLightHelper.propTypes = exact({
-  position: propTypeNumberArrayOfLength(3),
-  target: propTypeNumberArrayOfLength(3),
-  width: PropTypes.number,
-  height: PropTypes.number,
-  helperColor: PropTypes.string
-});
 
 interface RectAreaLightProps {
   position?: Array<number>;
@@ -217,18 +206,6 @@ const RectAreaLight: React.FunctionComponent<
     </primitive>
   );
 };
-
-// -----  PropTypes   ----- //
-RectAreaLight.propTypes = exact({
-  position: propTypeNumberArrayOfLength(3),
-  target: propTypeNumberArrayOfLength(3),
-  color: PropTypes.string,
-  intensity: PropTypes.number,
-  width: PropTypes.number,
-  height: PropTypes.number,
-  helper: PropTypes.bool,
-  helperColor: PropTypes.string
-});
 
 const RectAreaLightMemo = memo(RectAreaLight);
 RectAreaLightMemo.displayName = "RectAreaLight";

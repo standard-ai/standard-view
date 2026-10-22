@@ -1,55 +1,46 @@
 // FBX.tsx
-import React, { useEffect, useMemo, useRef, memo } from "react";
-import * as THREE from "three";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import { useViewContext, useFrame } from "../utils/hooks";
-import Group, { GroupProps, GroupPropTypes } from "./Group";
-import { Label } from "../primitives";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  memo,
+} from 'react';
+import * as THREE from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { useViewContext, useFrame } from '../utils/hooks';
+import {
+  ModelMaterialProps,
+  applyModelMaterialProps,
+  pickModelMaterialProps,
+  setModelHoverTint,
+} from '../utils/modelMaterials';
+import Group, { GroupProps } from './Group';
+import { Label } from '../primitives';
 
 interface FBXProps extends GroupProps {
   fbxPath?: string;
   fbxURL: string;
+  loadingLabel?: boolean;
   actionIndex?: number;
+  /** Called once the loaded group has been added, with its animation playing. */
+  onLoad?: (fbx: THREE.Group) => void;
+  /** Called once with the loader's error when the file cannot be loaded. */
+  onError?: (error: unknown) => void;
 }
 
-function updateAllMaterials(
-  color: string,
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  children: any,
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  materialProps: any
-): void {
-  if (children == null) {
-    return;
+/**
+ * removeChildren
+ *
+ * Empties the group: the loading Label, or the previous model.
+ * Object3D.remove mutates the children array, so iterate over a copy.
+ */
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function removeChildren(group: React.MutableRefObject<any>): void {
+  if (group.current && Array.isArray(group.current.children)) {
+    group.current.children.slice().map(child => group.current.remove(child));
   }
-
-  const _children = Array.isArray(children) ? children : [children];
-
-  _children.map(object => {
-    // Recurse into Groups
-    if (object.constructor.name === "Group" && object.children) {
-      updateAllMaterials(color, object.children, materialProps);
-    }
-
-    // @ts-ignore:TS2339 material does not exist on Object3D
-    if (object.material) {
-      if (color) {
-        // @ts-ignore:TS2339 material does not exist on Object3D
-        object.material.color.set(color);
-      }
-      Object.entries(materialProps).map(([propName, value]) => {
-        /* eslint-disable no-param-reassign */
-        // @ts-ignore:TS2339 material does not exist on Object3D
-        object.material[propName] = value;
-        /* eslint-enable no-param-reassign */
-        return null;
-      });
-    }
-
-    return null;
-  });
 }
 
 interface LoadFBXProps {
@@ -62,11 +53,21 @@ interface LoadFBXProps {
   envMap: THREE.Texture;
   castShadow: boolean;
   receiveShadow: boolean;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  materialProps: any;
+  materialProps?: ModelMaterialProps;
   actionIndex?: number;
+  onLoad: (fbx: THREE.Group) => void;
+  onError: (error: unknown) => void;
 }
 
+/**
+ * loadFBX
+ *
+ * Loads the file into the group and returns a cancel function. Once cancelled
+ * (the URL changed, or the component unmounted), a load that completes or
+ * fails afterwards touches nothing, so a slow earlier file never lands on top
+ * of a newer one. A failed load never throws: it is logged with the URL,
+ * nothing is drawn, and onError is called once.
+ */
 function loadFBX({
   group,
   fbxPath,
@@ -76,107 +77,201 @@ function loadFBX({
   castShadow,
   receiveShadow,
   materialProps,
-  actionIndex = 0
-}: LoadFBXProps): void {
+  actionIndex = 0,
+  onLoad,
+  onError,
+}: LoadFBXProps): () => void {
+  let cancelled = false;
+  const cancel = (): void => {
+    cancelled = true;
+  };
+
   // No FBX
   if (fbxURL == null) {
     /* eslint-disable no-console */
-    console.warn("[FBX] No fbxURL");
+    console.warn('[FBX] No fbxURL');
     /* eslint-enable no-console */
-    return;
+    return cancel;
   }
 
   // FBX
   const fbxLoader = new FBXLoader();
   fbxLoader.setPath(fbxPath);
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  fbxLoader.load(fbxURL, (fbx: any) => {
-    if (group.current && fbx) {
-      // Remove Loading Label or Previous OBJ
-      if (group.current.children) {
-        group.current.children.map(child => group.current.remove(child));
+  fbxLoader.load(
+    fbxURL,
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    (fbx: any) => {
+      if (cancelled) {
+        return;
       }
 
-      // Material Props
-      if (materialProps) {
-        const { color, ...otherMaterialProps } = materialProps;
-        updateAllMaterials(color, fbx.scene.children, otherMaterialProps);
-      }
+      if (group.current && fbx) {
+        // Remove Loading Label or Previous FBX
+        removeChildren(group);
 
-      // Animation
-      /* eslint-disable-next-line no-param-reassign */
-      mixer.current = new THREE.AnimationMixer(fbx);
-      if (fbx.animations && fbx.animations.length > 0) {
-        const action = mixer.current.clipAction(fbx.animations[actionIndex]);
-        action.play();
-      }
+        // Material Props
+        // FBXLoader returns the model's root Group itself (there is no .scene).
+        applyModelMaterialProps(fbx, materialProps);
 
-      // Env Map + Shadows
-      fbx.traverse(mesh => {
-        /* eslint-disable no-param-reassign */
-        // @ts-ignore
-        if (mesh.isMesh) {
-          if (envMap) {
-            // @ts-ignore
-            mesh.material.envMap = envMap;
-          }
-          mesh.castShadow = castShadow;
-          mesh.receiveShadow = receiveShadow;
+        // Animation
+        /* eslint-disable-next-line no-param-reassign */
+        mixer.current = new THREE.AnimationMixer(fbx);
+        if (fbx.animations && fbx.animations.length > 0) {
+          const action = mixer.current.clipAction(fbx.animations[actionIndex]);
+          action.play();
         }
-        /* eslint-enable no-param-reassign */
-      });
 
-      // Add FBX
-      group.current.add(fbx);
+        // Env Map + Shadows
+        fbx.traverse(mesh => {
+          /* eslint-disable no-param-reassign */
+          // @ts-ignore
+          if (mesh.isMesh) {
+            if (envMap) {
+              // @ts-ignore
+              mesh.material.envMap = envMap;
+            }
+            mesh.castShadow = castShadow;
+            mesh.receiveShadow = receiveShadow;
+          }
+          /* eslint-enable no-param-reassign */
+        });
+
+        // Add FBX
+        group.current.add(fbx);
+        onLoad(fbx);
+      }
+    },
+    undefined,
+    error => {
+      if (cancelled) {
+        return;
+      }
+
+      // Load Failure: log, draw nothing, report. Never throw.
+      /* eslint-disable-next-line no-console */
+      console.error(`[FBX] Failed to load ${fbxPath}${fbxURL}`, error);
+      removeChildren(group);
+      onError(error);
     }
-  });
+  );
+
+  return cancel;
 }
 
 const FBX: React.FunctionComponent<FBXProps> = function FBX({
-  fbxPath = "",
+  fbxPath = '',
   fbxURL,
   actionIndex = 0,
   view3DEnvMap = false,
   castShadow = false,
   receiveShadow = false,
+  loadingLabel = true,
+  onLoad,
+  onError,
+  hoverColor,
+  onPointerOver,
+  onPointerOut,
   ...otherProps
 }) {
-  const group = useRef();
-  const mixer = useRef<THREE.AnimationMixer>();
+  const group = useRef<THREE.Group | null>(null);
+  const model = useRef<THREE.Object3D | null>(null);
+  const mixer = useRef<THREE.AnimationMixer | null>(null);
   const { envMap } = useViewContext();
 
+  // Hover
+  // The loaded model is added to the group imperatively, so the hover color
+  // Group clones onto its React children never reaches it. Track the hover
+  // here (through the handlers Group calls) and tint the model's materials.
+  const [hovered, setHovered] = useState(false);
+  const hoveredRef = useRef(false);
+  const hoverColorRef = useRef(hoverColor);
+  hoverColorRef.current = hoverColor;
+  const handlePointerOver = useCallback(
+    function handlePointerOver(eventProps: unknown): void {
+      hoveredRef.current = true;
+      setHovered(true);
+      if (onPointerOver) {
+        onPointerOver(eventProps);
+      }
+    },
+    [onPointerOver]
+  );
+  const handlePointerOut = useCallback(
+    function handlePointerOut(eventProps: unknown): void {
+      hoveredRef.current = false;
+      setHovered(false);
+      if (onPointerOut) {
+        onPointerOut(eventProps);
+      }
+    },
+    [onPointerOut]
+  );
+  // Only attach handlers when something listens, so a loader inside a Group
+  // keeps forwarding events to that Group as before.
+  const hoverHandlers =
+    hoverColor != null || onPointerOver || onPointerOut
+      ? { onPointerOver: handlePointerOver, onPointerOut: handlePointerOut }
+      : {};
+  useEffect(
+    function updateHoverTint() {
+      if (model.current) {
+        setModelHoverTint(
+          model.current,
+          hovered && hoverColor != null ? hoverColor : null
+        );
+      }
+    },
+    [hovered, hoverColor]
+  );
+
+  // Latest Callbacks
+  // Read at load time through refs, so a new inline function on a re-render
+  // never restarts the load.
+  const onLoadRef = useRef(onLoad);
+  onLoadRef.current = onLoad;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+  const handleLoad = useCallback(function handleLoad(fbx: THREE.Group): void {
+    model.current = fbx;
+    if (hoveredRef.current && hoverColorRef.current != null) {
+      setModelHoverTint(fbx, hoverColorRef.current);
+    }
+    if (onLoadRef.current) {
+      onLoadRef.current(fbx);
+    }
+  }, []);
+  const handleError = useCallback(function handleError(error: unknown): void {
+    model.current = null;
+    if (onErrorRef.current) {
+      onErrorRef.current(error);
+    }
+  }, []);
+
   // Material Props
+  // Memoised on the values, not on the props object, so a re-render (a hover,
+  // a parent update) never restarts the load.
+  const {
+    color,
+    wireframe,
+    opacity,
+    transparent,
+    side,
+    depthWrite,
+    depthTest,
+  } = otherProps;
   const materialProps = useMemo(
     function updateMaterialProps() {
-      // No Material Props
-      if (!otherProps || Object.keys(otherProps).length === 0) {
-        return undefined;
-      }
-
-      // Acceptable Material Props
-      const materialPropsKeys = [
-        "color",
-        "wireframe",
-        "opacity",
-        "transparent",
-        "side",
-        "depthWrite",
-        "depthTest"
-      ];
-
-      // Extract Acceptable Props
-      const props = {};
-      materialPropsKeys.map(propName => {
-        if (otherProps[propName]) {
-          props[propName] = otherProps[propName];
-        }
-
-        return null;
+      return pickModelMaterialProps({
+        color,
+        wireframe,
+        opacity,
+        transparent,
+        side,
+        depthWrite,
+        depthTest,
       });
-
-      return Object.keys(props).length > 0 ? props : undefined;
     },
-    [otherProps]
+    [color, wireframe, opacity, transparent, side, depthWrite, depthTest]
   );
 
   // Environment Map
@@ -194,7 +289,7 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
   // Loading Text
   const loadingText = useMemo(
     function updateLoadText() {
-      return fbxURL || "No fbxURL";
+      return fbxURL || 'No fbxURL';
     },
     [fbxURL]
   );
@@ -202,19 +297,19 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
   // Load FBX and Animation Mixer
   useEffect(
     function updateFBXandMixer() {
-      if (group) {
-        loadFBX({
-          group,
-          fbxPath,
-          fbxURL,
-          mixer,
-          envMap: _envMap,
-          castShadow,
-          receiveShadow,
-          materialProps,
-          actionIndex
-        });
-      }
+      return loadFBX({
+        group,
+        fbxPath,
+        fbxURL,
+        mixer,
+        envMap: _envMap,
+        castShadow,
+        receiveShadow,
+        materialProps,
+        actionIndex,
+        onLoad: handleLoad,
+        onError: handleError,
+      });
     },
     [
       group,
@@ -224,32 +319,35 @@ const FBX: React.FunctionComponent<FBXProps> = function FBX({
       _envMap,
       castShadow,
       receiveShadow,
-      materialProps
+      materialProps,
+      handleLoad,
+      handleError,
     ]
   );
 
   // Animation Mixer Update
-  const clock = new THREE.Clock();
-  useFrame(function updateMixer() {
-    const delta = clock.getDelta();
+  // @react-three/fiber passes every frame callback the seconds elapsed since
+  // the previous frame, which is exactly what the mixer needs, so no clock of
+  // our own: THREE.Clock is deprecated since three.js r183 and warns on every
+  // construction.
+  useFrame(function updateMixer(_state, delta: number) {
     if (mixer.current) {
       mixer.current.update(delta);
     }
   });
 
   return (
-    <Group ref={group} {...otherProps}>
-      <Label text={loadingText} textColor="red" />
+    <Group
+      ref={group}
+      hoverColor={hoverColor}
+      {...hoverHandlers}
+      {...otherProps}
+    >
+      {loadingLabel && <Label text={loadingText} textColor="red" />}
     </Group>
   );
 };
 
-FBX.propTypes = exact({
-  fbxPath: PropTypes.string,
-  fbxURL: PropTypes.string,
-  ...GroupPropTypes
-});
-
 const FBXMemo = memo(FBX);
-FBXMemo.displayName = "FBX";
+FBXMemo.displayName = 'FBX';
 export default FBXMemo;

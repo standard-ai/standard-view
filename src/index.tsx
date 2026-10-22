@@ -13,8 +13,7 @@ import {
   Line,
   Text,
   Label,
-  Polygon,
-  MeshPropTypes
+  Polygon
 } from "./primitives";
 
 import {
@@ -30,7 +29,6 @@ import {
   Path,
   PCD,
   generateGroupProps,
-  GroupPropTypes
 } from "./groups";
 
 import {
@@ -104,9 +102,6 @@ export {
   useAnimationFrame,
   useFrame,
   useViewContext,
-  // PropTypes
-  MeshPropTypes,
-  GroupPropTypes,
   // Constants
   Z_AXIS,
   Y_AXIS,

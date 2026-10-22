@@ -1,10 +1,8 @@
 // DirectionalLight.tsx
 import * as React from "react";
 import * as THREE from "three";
-import exact from "prop-types-exact";
 import LightWithShadows, {
-  CommonLightWithShadowsProps,
-  CommonLightWithShadowsPropTypes
+  CommonLightWithShadowsProps
 } from "./LightWithShadows";
 
 const { useMemo, memo } = React;
@@ -47,11 +45,6 @@ const DirectionalLight: React.FunctionComponent<
     />
   );
 };
-
-// -----  PropTypes   ----- //
-DirectionalLight.propTypes = exact({
-  ...CommonLightWithShadowsPropTypes
-});
 
 const DirectionalLightMemo = memo(DirectionalLight);
 DirectionalLightMemo.displayName = "DirectionalLight";

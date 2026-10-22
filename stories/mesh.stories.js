@@ -1,30 +1,19 @@
 // mesh.stories.js
-import { storiesOf } from "@storybook/react";
-import { withKnobs } from "@storybook/addon-knobs";
 
 // Mesh Stories
-import TriangleStory from "./meshes/triangle";
-import QuadStory from "./meshes/quad";
-import BoxStory from "./meshes/box";
-import CircleStory from "./meshes/circle";
-import CylinderStory from "./meshes/cylinder";
-import LabelStory from "./meshes/label";
-import PlaneStory from "./meshes/plane";
-import SphereStory from "./meshes/sphere";
-import TextStory from "./meshes/text";
-import Polygon from "./meshes/polygon";
+export { default as Triangle } from './meshes/triangle';
+export { default as Polygon } from './meshes/polygon';
+export { default as Plane } from './meshes/plane';
+export { default as Quad } from './meshes/quad';
+export { default as Box } from './meshes/box';
+export { default as Circle } from './meshes/circle';
+export { default as Sphere } from './meshes/sphere';
+export { default as Cylinder } from './meshes/cylinder';
 
-const stories = storiesOf("Meshes", module);
-stories.addDecorator(withKnobs);
+export { default as Label } from './meshes/label';
+export { default as Text } from './meshes/text';
 
-// Mesh Stories
-stories.add("Triangle", TriangleStory);
-stories.add("Quad", QuadStory);
-stories.add("Box", BoxStory);
-stories.add("Circle", CircleStory);
-stories.add("Cylinder", CylinderStory);
-stories.add("Label", LabelStory);
-stories.add("Plane", PlaneStory);
-stories.add("Sphere", SphereStory);
-stories.add("Text", TextStory);
-stories.add("Polygon", Polygon);
+// Default export for Storybook
+export default {
+  title: 'Meshes',
+};

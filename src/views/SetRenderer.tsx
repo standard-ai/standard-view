@@ -1,7 +1,7 @@
 // SetRenderer.tsx
-import * as React from "react";
-import * as THREE from "three";
-import { useFrame, useViewContext } from "../utils/hooks";
+import * as React from 'react';
+import * as THREE from 'three';
+import { useFrame, useViewContext } from '../utils/hooks';
 
 const { useEffect, memo } = React;
 
@@ -23,6 +23,8 @@ interface GLProps {
   toneMapping?: number;
   toneMappingExposure?: number;
   toneMappingWhitePoint?: number;
+  antialias?: boolean;
+  preserveDrawingBuffer?: boolean;
 }
 
 function SetRenderer(glProps: GLProps): null {
@@ -77,5 +79,5 @@ function SetRenderer(glProps: GLProps): null {
 }
 
 const SetRendererMemo = memo(SetRenderer);
-SetRendererMemo.displayName = "SetRenderer";
+SetRendererMemo.displayName = 'SetRenderer';
 export default SetRendererMemo;

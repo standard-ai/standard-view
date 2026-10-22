@@ -1,16 +1,25 @@
 // view.stories.js
-import { storiesOf } from "@storybook/react";
-import { withKnobs } from "@storybook/addon-knobs";
 
 // View Stories
-import ControlsStory from "./views/controls";
-import NestedContextStory from "./views/nested-contexts";
-import UpdatingContext from "./views/updating-context";
+import { default as NestedContext } from './views/nested-contexts';
+import { default as UpdatingContext } from './views/updating-context';
+export { default as Controls } from './views/controls';
 
-const stories = storiesOf("Views", module);
-stories.addDecorator(withKnobs);
+// Default export for Storybook
+export default {
+  title: 'Views',
+};
 
-// View Stories
-stories.add("Controls", ControlsStory);
-stories.add("Updating Context", UpdatingContext);
-stories.add("Nested Contexts", NestedContextStory);
+export const NestedContextStory = {
+  render: NestedContext,
+  name: 'Nested Context',
+  args: NestedContext.args,
+  argTypes: NestedContext.argTypes,
+};
+
+export const UpdatingContextStory = {
+  render: UpdatingContext,
+  name: 'Updating Context',
+  args: UpdatingContext.args,
+  argTypes: UpdatingContext.argTypes,
+};

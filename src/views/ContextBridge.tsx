@@ -1,6 +1,6 @@
 // ContextBridge.tsx
 import * as React from "react";
-import { useFrame } from "react-three-fiber";
+import { useFrame } from "@react-three/fiber";
 
 const { useState, useContext, memo } = React;
 
@@ -20,6 +20,11 @@ function ContextListener({
   values,
   index
 }: ContextListenerProps): null {
+  // Safety checks
+  if (!context || !values || !Array.isArray(values) || typeof index !== 'number') {
+    return null;
+  }
+
   /* eslint-disable no-param-reassign */
   values[index] = useContext(context);
   /* eslint-enable no-param-reassign */
@@ -30,7 +35,7 @@ function ContextListener({
  * GeneraterContextListeners
  *
  * Create a ContextListener for each context in the given contexts array.
- * Each ContextListener must be a outside the react-three-fiber's Canvas
+ * Each ContextListener must be a outside the @react-three/fiber's Canvas
  * component to detect the context values ContextListener and changes
  * the value in the values array.
  * the useContext hook in each ContextListener.
@@ -43,6 +48,11 @@ export function GenerateContextListeners(
   values: Array<any>
   /* eslint-enable @typescript-eslint/no-explicit-any */
 ): Array<React.ReactNode> {
+  // Safety checks
+  if (!contexts || !Array.isArray(contexts) || !values || !Array.isArray(values)) {
+    return [];
+  }
+
   /* eslint-disable react/no-array-index-key */
   const contextListeners: Array<React.ReactNode> = contexts.map(
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -75,12 +85,12 @@ export const ContextBridge = memo(function ContextBridge({
   values,
   children
 }: ContextBridgeProps) {
-  const [, update] = useState();
+  const [, update] = useState<number>(0);
   // Context Updater
   // Always trigger a rerender here and trust that
   // Context.Provider will only rerender when value
   // has changed
-  useFrame(() => update({}));
+  useFrame(() => update(prev => prev + 1));
 
   if (!contexts || !values) {
     return <>{children}</>;

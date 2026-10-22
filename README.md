@@ -1,17 +1,19 @@
 # Standard View
 
+Forked from @standard/view
+
 # Usage
 
 Install
 
 ```
-$ npm install @standard/view
+$ npm install @ifiwas/standard-view
 ```
 
 Place Views into your React App. For example:
 
 ```
-import { View3D, Box } from '@standard/view';
+import { View3D, Box } from '@ifiwas/standard-view';
 .
 .
 .
@@ -21,32 +23,32 @@ import { View3D, Box } from '@standard/view';
 </View3D>
 ```
 
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/example.png?raw=true" width="250" height="200" />
+<img src="https://github.com/ifiwas/standard-view/blob/master/example-gifs/example.png?raw=true" width="250" height="200" />
 
 For details about valid properties, look at the interfaces named `*Props`, where `*` is the component name, in `src/primitves/` and `src/groups/`.
 
 ## Stories
 
 `yarn storybook` to see stories of each component in `standard-view`.
-You may also visit [Standard View Storybook](https://standard-view.netlify.app/?path=/story) served with netlify.
+You may also visit [Standard View Storybook](https://standard-view.ifiwaslabs.com) served with netlify.
 
 ### Examples
 
 <p align="center">
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/sample-platter.gif?raw=true" width="800" height="400" />
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/standard-cube.gif?raw=true" width="400" height="400" />
+<img src="https://github.com/ifiwas/standard-view/blob/master/example-gifs/sample-platter.gif?raw=true" width="800" height="400" />
+<img src="https://github.com/ifiwas/standard-view/blob/master/example-gifs/standard-cube.gif?raw=true" width="400" height="400" />
 </p>
 
 ## create-react-app to Standard View Project
 
 <p align="center">
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/create-app-to-standard-view.gif?raw=true" />
+<img src="https://github.com/ifiwas/standard-view/blob/master/example-gifs/create-app-to-standard-view.gif?raw=true" />
 </p>
 
 ## Fit to Window
 
 <p align="center">
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/canvas-css.gif?raw=true" />
+<img src="https://github.com/ifiwas/standard-view/blob/master/example-gifs/canvas-css.gif?raw=true" />
 </p>
 
 Set `.App canvas` in css file to adjust Standard View `View3D` canvas.
@@ -54,7 +56,7 @@ Set `.App canvas` in css file to adjust Standard View `View3D` canvas.
 ## Intellisense
 
 <p align="center">
-<img src="https://github.com/standard-ai/standard-view/blob/master/example-gifs/intellisense.gif?raw=true" />
+<img src="https://github.com/ifiwas/standard-view/blob/master/example-gifs/intellisense.gif?raw=true" />
 </p>
 
 For VSCode, press `ctrl + space` to force load intellisense at cursor location.
@@ -154,11 +156,11 @@ Event Properties
 `Mesh` can also support animations via the animation property. A function with one argument that may be destructured to include `state`, `setState`, `mesh`, and any Canvas properties desired for the animation.
 All primitives and shapes may have animation. These animations are reactive, so they incur many render calls, but also maintain `react-three-renderer`'s native raycasting for the event property functions.
 
-`Mesh` also exposes `react-three-fiber`'s the event property functions but with a constrained argument set, similar to animation. All event property functions take one arguement that may be destructured to include `mesh`, `state`, `setState`, and any Canvas prop. The benefit of this design, just like animations, is that a reference to `mesh` is automatically provided. Moreover, `react-three-fiber`'s `Canvas` state properties are exposed. This allows event functions to reach right into the `react-three-fiber`/`three.js`'s `scene`, `camera`, `gl`, etc. Hence all shapes that are `Mesh`s may have these event property functions.
+`Mesh` also exposes `@react-three/fiber`'s the event property functions but with a constrained argument set, similar to animation. All event property functions take one arguement that may be destructured to include `mesh`, `state`, `setState`, and any Canvas prop. The benefit of this design, just like animations, is that a reference to `mesh` is automatically provided. Moreover, `@react-three/fiber`'s `Canvas` state properties are exposed. This allows event functions to reach right into the `@react-three/fiber`/`three.js`'s `scene`, `camera`, `gl`, etc. Hence all shapes that are `Mesh`s may have these event property functions.
 
-Of course, `Mesh` can accept properties handled by `react-three-fiber`/`three.js` as well.
-After explicitly managing these properties, remaining properties are passed to `react-three-fiber`'s `mesh`.
-(`Mesh` is a wrapper of `react-three-fiber`'s `mesh`, which is a wrapper of `THREE.Mesh`.)
+Of course, `Mesh` can accept properties handled by `@react-three/fiber`/`three.js` as well.
+After explicitly managing these properties, remaining properties are passed to `@react-three/fiber`'s `mesh`.
+(`Mesh` is a wrapper of `@react-three/fiber`'s `mesh`, which is a wrapper of `THREE.Mesh`.)
 
 ## View3D
 
@@ -174,8 +176,8 @@ Camera Control Properties
 - orbitControls: boolean
 - mapControls: boolean
 
-Of course, `View3D` can accept `Canvas` properties handled by `react-three-fiber` as well. The Standard View properties are handled and stripped away before passing the properties to `Canvas`.
-(`View3D` is a wrapper of `react-three-fiber`'s `Canvas`.)
+Of course, `View3D` can accept `Canvas` properties handled by `@react-three/fiber` as well. The Standard View properties are handled and stripped away before passing the properties to `Canvas`.
+(`View3D` is a wrapper of `@react-three/fiber`'s `Canvas`.)
 
 ## Text
 
@@ -192,6 +194,6 @@ Fonts
 
 In general `Text` will be much more computation expensive to render compared to `Label` which is just a `Plane` with a texture of the desired text.
 
-## react-three-fiber
+## @react-three/fiber
 
-Checkout [`react-three-fiber`'s page](https://github.com/drcmda/react-three-fiber) for more details.
+Checkout [`@react-three/fiber`'s page](https://github.com/drcmda/@react-three/fiber) for more details.

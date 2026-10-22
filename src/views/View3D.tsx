@@ -1,26 +1,24 @@
 // View3D.tsx
-import * as React from "react";
-import { Canvas, useThree } from "react-three-fiber";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import SetRenderer from "./SetRenderer";
-import SetBackground from "./SetBackground";
-import SetShadows from "./SetShadows";
-import SetControls, { UpdateControls } from "./SetControls";
-import { GenerateContextListeners, ContextBridge } from "./ContextBridge";
-import { ViewContextProvider } from "./ViewContext";
-import { reconcileSynonymousProps } from "../utils/util";
+import * as React from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import SetRenderer from './SetRenderer';
+import SetBackground from './SetBackground';
+import SetShadows from './SetShadows';
+import SetControls, { UpdateControls } from './SetControls';
+import { GenerateContextListeners, ContextBridge } from './ContextBridge';
+import { ViewContextProvider } from './ViewContext';
+import { reconcileSynonymousProps } from '../utils/util';
 import {
   SYNONYMOUS_CONTROLS_PROPS,
   ANTONYMOUS_CONTROLS_PROPS,
   SYNONYMOUS_CAMERA_PROPS,
   CONTROLS_TYPES,
   CAMERA_TYPES,
-  DEFAULT_UP
-} from "../utils/constants";
+  DEFAULT_UP,
+} from '../utils/constants';
 
-/* eslint-disable-next-line @typescript-eslint/no-var-requires */
-const { version } = require("../../package.json");
+// @ts-ignore
+import { version } from '../../package.json';
 
 const { useRef, useEffect, useMemo, memo } = React;
 
@@ -48,16 +46,16 @@ interface View3DProps {
 /**
  * View3D
  *
- * In Standard View, View3D creates the react-three-fiber Canvas
+ * In Standard View, View3D creates the @react-three/fiber Canvas
  * and also applies some extra features, such as setting the
  * background color/texture/equirectangular texture.
- * For react-three-fiber, this is not possible since the background
+ * For @react-three/fiber, this is not possible since the background
  * color or texture is not a THREE.WebGLRenderer parameter with a setter.
- * Since react-three-fiber does not provide an easy way to call methods
+ * Since @react-three/fiber does not provide an easy way to call methods
  * of three.js objects, View3D provides the settings for the Canvas
- * that react-three-fiber does not.
+ * that @react-three/fiber does not.
  *
- * All other react-three-fiber functionality for its Canvas properties
+ * All other @react-three/fiber functionality for its Canvas properties
  * are maintained and applied, since the View3D specific properties are
  * stripped out.
  *
@@ -66,25 +64,25 @@ interface View3DProps {
  * prop in the form of an Object, similar to camera's props.
  *
  * SetCanvasProps is a small component that isolates the useThree hook.
- * Unfortunately, react-three-fiber hooks incur additional renders,
+ * Unfortunately, @react-three/fiber hooks incur additional renders,
  * hence those hooks have been encapsulated into small components to avoid
  * re-rendering larger more complicated logic. Similarly, UpdateCameraControls
  * isolates the useThree hook.
  *
  * SetBackground, SetShadows, and SetControls contain logic encapsulated in
- * components because these changes cannot be applied through react-three-fiber
+ * components because these changes cannot be applied through @react-three/fiber
  * props on Canvas. Also, this logic cannot be applied in the body of View3D
  * since background, shadows, and camera controls depends on the creation of
  * Canvas and ultimately mutate the Canvas Properties, namely camera, gl,
  * and scene. Thus this logic must execute in components after Canvas is created
  * and within the Canvas component.
  *
- * Any number of React contexts may be passed into View3D. Since react-three-fiber
+ * Any number of React contexts may be passed into View3D. Since @react-three/fiber
  * provides its own render method and reconciler, contexts must be maintained via
  * a context bridge. In order to permeate contexts into View3D, pass an array of
  * all contexts to the contexts prop.
  * Also, ViewContext will always provide Canvas Props so that all components in a
- * particular View3D has access to those particular react-three-fiber
+ * particular View3D has access to those particular @react-three/fiber
  * Canvas Props (gl, scene, camera, etc)
  *
  * @param {View3DProps} props
@@ -98,9 +96,9 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
   backgroundEquirectangularTextureURL,
   backgroundEquirectangularRGBEURL,
   shadowMapEnabled = false,
-  shadowType = "pcfsoft",
+  shadowType = 'pcf',
   camera,
-  controls,
+  controls = {},
   gl,
   orthographic,
   contexts,
@@ -110,7 +108,7 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
   // Print Standard View Version
   useEffect(() => {
     /* eslint-disable-next-line no-console */
-    console.log(`%cStandard View Core ${version}`, "color: orange");
+    console.log(`%cStandard View Core ${version}`, 'color: orange');
   }, []);
 
   // -----   Contexts   -----//
@@ -127,29 +125,29 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
   );
 
   // -----   Canvas Props   -----//
-  const canvasProps = useRef();
+  const canvasProps = useRef<any>(null);
 
   // -----   gl Props   -----//
   const { glParameters, glProps } = useMemo(
     function updateGLProps() {
       // WebGLRenderer Parameters on Initialization
       const glParameterKeys = [
-        "context",
-        "precision",
-        "alpha",
-        "premultipliedAlpha",
-        "antialias",
-        "stencil",
-        "preserveDrawingBuffer",
-        "powerPreference",
-        "failIfMajorPerformanceCaveat",
-        "depth",
-        "logarithmicDepthBuffer"
+        'context',
+        'precision',
+        'alpha',
+        'premultipliedAlpha',
+        'antialias',
+        'stencil',
+        'preserveDrawingBuffer',
+        'powerPreference',
+        'failIfMajorPerformanceCaveat',
+        'depth',
+        'logarithmicDepthBuffer',
       ];
 
       /* eslint-disable no-shadow */
       const glParameters = { antialias: true, preserveDrawingBuffer: true };
-      const glProps = {};
+      const glProps = { antialias: true, preserveDrawingBuffer: true };
       /* eslint-enable no-shadow */
 
       // Extract glParams and glProps
@@ -177,14 +175,14 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
         backgroundColor,
         backgroundTextureURL,
         backgroundEquirectangularTextureURL,
-        backgroundEquirectangularRGBEURL
+        backgroundEquirectangularRGBEURL,
       };
     },
     [
       backgroundColor,
       backgroundTextureURL,
       backgroundEquirectangularTextureURL,
-      backgroundEquirectangularRGBEURL
+      backgroundEquirectangularRGBEURL,
     ]
   );
 
@@ -192,11 +190,34 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
   const shadowProps = useMemo(
     function updateShadowProps() {
       return {
-        shadowMapEnabled: shadowMapEnabled || true,
-        shadowType: shadowType || "type"
+        shadowMapEnabled: shadowMapEnabled ?? true,
+        shadowType: shadowType ?? 'pcf',
       };
     },
     [shadowMapEnabled, shadowType]
+  );
+
+  // @react-three/fiber owns gl.shadowMap via the Canvas `shadows` prop and
+  // re-applies it on every render. If we don't drive it, R3F resets
+  // shadowMap.enabled to false on any re-render and shadows get stuck off.
+  // Map our shadowType onto R3F's shadow presets so R3F stays the single
+  // source of truth.
+  const shadows = useMemo(
+    function updateCanvasShadows() {
+      if (!shadowProps.shadowMapEnabled) {
+        return false;
+      }
+      // three.js r182+ deprecates PCFSoftShadowMap: it warns on every shadow
+      // pass and swaps in PCFShadowMap, which is soft as well. 'pcfsoft' is
+      // therefore an alias of 'pcf' rather than fiber's 'soft' preset.
+      const presetByType = {
+        basic: 'basic', // THREE.BasicShadowMap
+        pcf: 'percentage', // THREE.PCFShadowMap
+        pcfsoft: 'percentage', // alias of pcf
+      };
+      return presetByType[shadowProps.shadowType] ?? 'percentage';
+    },
+    [shadowProps]
   );
 
   // -----   Camera Controls   ----- //
@@ -218,7 +239,7 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
         return CONTROLS_TYPES.MAP_CONTROLS;
       }
 
-      return "none";
+      return 'none';
     },
     [orbitControls, trackballControls, mapControls]
   );
@@ -241,7 +262,7 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
         target,
         up,
         rotation,
-        roll
+        roll,
       };
       /* eslint-enable no-shadow */
 
@@ -249,44 +270,16 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
     },
     [camera]
   );
-  const updateDefaultCamera = useMemo(
-    function updateUpdateDefaultCamera() {
-      // No Camera Props
-      if (camera == null) {
-        return true;
-      }
-
-      if (camera.updateDefaultCamera != null) {
-        return camera.updateDefaultCamera;
-      } else if (
-        // Fixed orthographic left, right, top, bottom
-        orthographic &&
-        (camera.left != null ||
-          camera.right != null ||
-          camera.top != null ||
-          camera.bottom != null)
-      ) {
-        return false;
-      } else if (!orthographic && camera.aspect != null) {
-        // Fixed aspect
-        return false;
-      } else {
-        return true;
-      }
-    },
-    [camera, orthographic]
-  );
 
   // -----   Controls Props   ----- //
   const controlsProps = useMemo(
     function updateControlsProps() {
       // Extract Angles of Rotation
-      /* eslint-disable-next-line no-shadow */
-      const { polarAngle = 0, azimuthAngle = 0, ...controlsProps } =
-        controls || {};
+      var { polarAngle = 0, azimuthAngle = 0, ...controlsProps } = controls;
+      controlsProps = controlsProps || {};
 
       // Reconcile Control Props
-      if (controlsType !== "none") {
+      if (controlsType !== 'none') {
         reconcileSynonymousProps(
           controlsProps,
           SYNONYMOUS_CONTROLS_PROPS,
@@ -310,18 +303,19 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
         polarAngle,
         azimuthAngle,
         cameraExtrinsics,
+        cameraIntrinsics: cameraProps,
         controlsProps:
-          Object.keys(controlsProps).length > 0 ? controlsProps : undefined
+          Object.keys(controlsProps).length > 0 ? controlsProps : undefined,
       };
     },
-    [controlsType, cameraType, controls, cameraExtrinsics]
+    [controlsType, cameraType, controls, cameraExtrinsics, cameraProps]
   );
 
   const values = useRef([]);
   /* eslint-disable react-hooks/exhaustive-deps */
   const contextListeners = useMemo(
     function generateContextListeners() {
-      return GenerateContextListeners(_contexts, values.current);
+      return GenerateContextListeners(_contexts, values?.current || []);
     },
     [_contexts]
   );
@@ -333,7 +327,8 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
       <Canvas
         camera={cameraProps}
         orthographic={orthographic}
-        updateDefaultCamera={updateDefaultCamera}
+        shadows={shadows}
+        // updateDefaultCamera={updateDefaultCamera}
         // @ts-ignore:TS2559 no properties in common with Partial<WebGLRenderer>
         gl={glParameters}
         {...otherProps}
@@ -356,41 +351,16 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
   );
 };
 
-// -----  PropTypes   ----- //
-/* eslint-disable react/forbid-prop-types */
-View3D.propTypes = exact({
-  backgroundColor: PropTypes.string,
-  backgroundTextureURL: PropTypes.string,
-  backgroundEquirectangularTextureURL: PropTypes.string,
-  backgroundEquirectangularRGBEURL: PropTypes.string,
-  trackballControls: PropTypes.bool,
-  orbitControls: PropTypes.bool,
-  mapControls: PropTypes.bool,
-  shadowMapEnabled: PropTypes.bool,
-  shadowType: PropTypes.string,
-  camera: PropTypes.object, // CameraProps
-  controls: PropTypes.object, // ControlsProps
-  gl: PropTypes.object, // glProps
-  orthographic: PropTypes.bool,
-  contexts: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.any),
-    PropTypes.any
-  ]), // Array<React.Context> | React.Context
-  style: PropTypes.object,
-  children: PropTypes.any
-});
-/* eslint-enable react/forbid-prop-types */
-
 const View3DMemo = memo(View3D);
-View3DMemo.displayName = "View3D";
+View3DMemo.displayName = 'View3D';
 export default View3DMemo;
 
 /**
  * SetCanvasProps
  *
  * Isolates the useThree hook to avoid larger components from
- * re-rendering up to 3 times--this is a bug from react-three-fiber.
- * Any react-three-fiber hook call incurs additional renders.
+ * re-rendering up to 3 times--this is a bug from @react-three/fiber.
+ * Any @react-three/fiber hook call incurs additional renders.
  */
 const SetCanvasProps = memo(
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -401,4 +371,4 @@ const SetCanvasProps = memo(
   },
   () => true
 );
-SetCanvasProps.displayName = "SetCanvasProps";
+SetCanvasProps.displayName = 'SetCanvasProps';

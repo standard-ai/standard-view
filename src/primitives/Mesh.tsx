@@ -1,36 +1,27 @@
 // Mesh.tsx
-import * as React from "react";
-import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import { DEFAULT_COLOR } from "../utils/styles";
+import * as React from 'react';
+import * as THREE from 'three';
+import { DEFAULT_COLOR } from '../utils/styles';
 import {
   DEFAULT_NORMAL,
   DEFAULT_NORMAL_VEC3,
   MATERIAL_TYPES,
   SIDE_TYPES,
-  EULER_ORDERS
-} from "../utils/constants";
-import { StandardViewTypes, GeometryPropTypes } from "../utils/interfaces";
-import { EPS } from "../utils/math";
+  EULER_ORDERS,
+} from '../utils/constants';
+import { StandardViewTypes } from '../utils/interfaces';
+import { EPS } from '../utils/math';
 import {
   handleClick,
   checkPropagation,
-  AnimationComponent
-} from "../utils/events";
-import { useViewContext } from "../utils/hooks";
-import { objectToArray, filterArrayLength, toQuaternion } from "../utils/util";
-import { performanceStart, performanceEnd } from "../utils/performance";
+  AnimationComponent,
+} from '../utils/events';
+import { useViewContext } from '../utils/hooks';
+import { objectToArray, filterArrayLength, toQuaternion } from '../utils/util';
+import { performanceStart, performanceEnd } from '../utils/performance';
 
-const {
-  useState,
-  useRef,
-  useEffect,
-  useMemo,
-  useCallback,
-  forwardRef,
-  memo
-} = React;
+const { useState, useRef, useEffect, useMemo, useCallback, forwardRef, memo } =
+  React;
 
 export interface MeshProps {
   // Mesh Props
@@ -135,7 +126,7 @@ const MaterialComponent = memo<MaterialComponentProps>(
     materialType,
     material,
     hasMaterialChild,
-    materialProps
+    materialProps,
   }) {
     const MeshMaterial = useMemo(
       function updateMeshMaterial() {
@@ -157,18 +148,18 @@ const MaterialComponent = memo<MaterialComponentProps>(
   }
   /* eslint-enable react/prop-types */
 );
-MaterialComponent.displayName = "MaterialComponent";
+MaterialComponent.displayName = 'MaterialComponent';
 
 /**
  * Mesh
  *
- * This is a wrapper for react-three-fiber/three.js's mesh.
+ * This is a wrapper for @react-three/fiber/three.js's mesh.
  * In three.js Mesh extends Object3D which is essentially the root of
  * all 3D objects. With this wrapper, Standard View users need not
  * get tangled with the intricacies of geometries and materials and
  * may treat primitives as singular objects with properties. Standard View
  * manages which property is assigned to geometry or materials.
- * However, just as react-three-fiber allows for manipulation of all the
+ * However, just as @react-three/fiber allows for manipulation of all the
  * three.js properties, so does Standard View. A primitive or shape may be
  * loaded with custom geometry or materials or even composed with custom
  * child components.
@@ -201,14 +192,14 @@ MaterialComponent.displayName = "MaterialComponent";
  * onPointerMove, onPointerDown, onPointerUp, onWheel,
  * and other mouse-handling events.
  *
- * Mesh also exposes react-three-fiber's the event property functions but with
+ * Mesh also exposes @react-three/fiber's the event property functions but with
  * a constrained argument set, same as animation. All event property functions
  * take one arguement that may be destructured to include mesh, state, setState,
  * and any Canvas prop. The benefit of this design, just like
  * animations, is that a reference to mesh is automatically provided and also
- * access to all props are available. Moreover, react-three-fiber's Canvas
+ * access to all props are available. Moreover, @react-three/fiber's Canvas
  * state properties are exposed. This allows event functions to reach right
- * into the react-three-fiber/three.js's scene, camera, gl. Hence all shapes
+ * into the @react-three/fiber/three.js's scene, camera, gl. Hence all shapes
  * that are Meshes may have these event property functions.
  *
  * @param {MeshProps} props
@@ -232,7 +223,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
     quaternion,
     // Material Props
     material,
-    materialType = "basic",
+    materialType = 'basic',
     color = DEFAULT_COLOR,
     hoverColor,
     opacity = 1,
@@ -263,7 +254,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
     // edges = false,
     // edgeColor = "black",
     // edgeThresholdAngle = 1,
-    side = "front",
+    side = 'front',
     depthWrite = true,
     depthTest = true,
     // Map Props
@@ -301,7 +292,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
   },
   ref
 ) {
-  performanceStart("Mesh");
+  performanceStart('Mesh');
 
   // Canvas Properties
   // const canvasProps = useContext(ViewContext);
@@ -400,6 +391,12 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
   );
 
   // Color
+
+  // Prevent DEFAULT_COLOR blend into texture with given color
+  if (textureURL && color == DEFAULT_COLOR) {
+    color = undefined;
+  }
+
   const [_color, setColor] = useState(color);
   useEffect(
     function updateColor() {
@@ -412,7 +409,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
   const mapProps = useMemo(
     function initMapProps() {
       return {
-        anisotropy
+        anisotropy,
       };
     },
     [anisotropy]
@@ -437,9 +434,14 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
           tex[prop] = value;
           return null;
         });
+        tex.colorSpace = THREE.SRGBColorSpace;
         return tex;
       }
 
+      // Set color space to sRGB if not set
+      if (map?.colorSpace == THREE.NoColorSpace) {
+        map.colorSpace = THREE.SRGBColorSpace;
+      }
       return map;
     },
     [map, mapProps, _textureURL]
@@ -448,7 +450,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
   // Environment Map
   const _envMap = useMemo(
     function updateEnvMap() {
-      const compatibleMaterials = ["basic", "physical", "standard"];
+      const compatibleMaterials = ['basic', 'physical', 'standard'];
       return view3DEnvMap && compatibleMaterials.includes(materialType)
         ? viewContextEnvMap
         : envMap;
@@ -474,7 +476,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
         metalnessMap,
         alphaMap,
         envMap: _envMap,
-        envMapIntensity
+        envMapIntensity,
       };
 
       return otherMapProps;
@@ -494,14 +496,14 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
       metalnessMap,
       alphaMap,
       _envMap,
-      envMapIntensity
+      envMapIntensity,
     ]
   );
 
   // Side
   const _side = useMemo(
     function updateSide() {
-      if (typeof side === "string") {
+      if (typeof side === 'string') {
         return SIDE_TYPES[side];
       } else {
         // THREE.Side
@@ -516,16 +518,16 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
     function updateMaterialProps() {
       // Metalness
       const _metalness =
-        materialType === "standard" || materialType === "physical"
+        materialType === 'standard' || materialType === 'physical'
           ? metalness
           : undefined;
       // Roughness
       const _roughness =
-        materialType === "standard" || materialType === "physical"
+        materialType === 'standard' || materialType === 'physical'
           ? roughness
           : undefined;
       // Reflectivity
-      const reflectiveMaterials = ["basic", "lambert", "phong", "physical"];
+      const reflectiveMaterials = ['basic', 'lambert', 'phong', 'physical'];
       const _reflectivity = reflectiveMaterials.includes(materialType)
         ? reflectivity
         : undefined;
@@ -542,7 +544,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
         reflectivity: _reflectivity,
         side: _side,
         depthWrite,
-        depthTest
+        depthTest,
       };
 
       // Clean undefined and null
@@ -569,7 +571,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
       transparent,
       _side,
       depthWrite,
-      depthTest
+      depthTest,
     ]
   );
 
@@ -638,7 +640,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
   );
 
   // Ref
-  const meshRef = useRef(); // Hooks must be deterministic
+  const meshRef = useRef<THREE.Mesh | null>(null); // Hooks must be deterministic
   const mesh = ref || meshRef;
 
   // State
@@ -674,7 +676,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
       onPointerDown,
       onPointerUp,
       onPointerMove,
-      onWheel
+      onWheel,
     ]
   );
 
@@ -688,7 +690,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
         mesh,
         state: _state,
         setState,
-        ...canvasProps
+        ...canvasProps,
       };
     },
     [mesh, _state, setState, canvasProps]
@@ -703,7 +705,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
         mesh,
         eventProps,
         onClick,
-        onDoubleClick
+        onDoubleClick,
       };
     },
     [
@@ -712,7 +714,7 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
       mesh,
       eventProps,
       onClick,
-      onDoubleClick
+      onDoubleClick,
     ]
   );
 
@@ -837,11 +839,11 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
     [receiveShadow, mesh]
   );
 
-  performanceEnd("Mesh");
+  performanceEnd('Mesh');
 
   return (
     <>
-      {performanceStart("Around mesh")}
+      {performanceStart('Around mesh')}
       <mesh
         ref={mesh}
         // Event Functions
@@ -857,7 +859,6 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
         position={_position as [number, number, number]}
         scale={_scale as [number, number, number]}
         quaternion={_quaternion}
-        // @ts-ignore:TS2322 // conflict with Mesh from THREE
         material={_material}
         receiveShadow={_receiveShadow}
         {...otherProps}
@@ -865,96 +866,18 @@ const Mesh: React.FunctionComponent<MeshProps> = forwardRef<
         <MaterialComponent
           materialType={materialType}
           hasMaterialChild={hasMaterialChild}
-          // @ts-ignore:TS2322 // conflict with Mesh from THREE
-          material={_material}
+          material={_material as THREE.Material}
           materialProps={materialProps}
         />
         {animation && <AnimationComponent animation={_animation} />}
         {_children}
+        {/* @ts-ignore: Property 'mesh' does not exist on type 'JSX.IntrinsicElements' */}
       </mesh>
-      {performanceEnd("Around mesh")}
+      {performanceEnd('Around mesh')}
     </>
   );
 });
 
-// ------------------------- //
-// -----   PropTypes   ----- //
-// ------------------------- //
-/* eslint-disable react/forbid-prop-types */
-Mesh.propTypes = exact({
-  // Geometry
-  ...GeometryPropTypes,
-  // Material
-  material: PropTypes.object, // THREE.Material
-  materialType: PropTypes.string,
-  view3DEnvMap: PropTypes.bool,
-  // materialProps
-  color: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-  hoverColor: PropTypes.string,
-  opacity: PropTypes.number,
-  transparent: PropTypes.bool,
-  roughness: PropTypes.number,
-  metalness: PropTypes.number,
-  reflectivity: PropTypes.number,
-  anisotropy: PropTypes.number,
-  texturePath: PropTypes.string,
-  textureURL: PropTypes.string,
-  map: PropTypes.object, // THREE.Texture,
-  aoMap: PropTypes.object, // THREE.Texture
-  aoMapIntensity: PropTypes.number,
-  bumpMap: PropTypes.object, // THREE.Texture
-  bumpScale: PropTypes.number,
-  normalMap: PropTypes.object, // THREE.Texture
-  normalMapType: PropTypes.number,
-  normalMapScale: PropTypes.number,
-  displacementMap: PropTypes.object, // THREE.Texture
-  displacementMapScale: PropTypes.number,
-  displacementBias: PropTypes.number,
-  roughnessMap: PropTypes.object, // THREE.Texture
-  metalnessMap: PropTypes.object, // THREE.Texture
-  alphaMap: PropTypes.object, // THREE.Texture
-  envMap: PropTypes.object, // THREE.Texture
-  envMapIntensity: PropTypes.number,
-  wireframe: PropTypes.bool,
-  visible: PropTypes.bool,
-  side: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-  depthWrite: PropTypes.bool,
-  depthTest: PropTypes.bool,
-  renderOrder: PropTypes.number,
-
-  // Group
-  groupMember: PropTypes.bool,
-  // Shadow
-  castShadow: PropTypes.bool,
-  receiveShadow: PropTypes.bool,
-  // Animation
-  animation: PropTypes.func,
-  // State
-  state: PropTypes.object,
-  // Events
-  onClick: PropTypes.func,
-  onDoubleClick: PropTypes.func,
-  onWheel: PropTypes.func,
-  onPointerUp: PropTypes.func,
-  onPointerDown: PropTypes.func,
-  onPointerMove: PropTypes.func,
-  onPointerOver: PropTypes.func,
-  onPointerOut: PropTypes.func,
-  hoverable: PropTypes.bool,
-  mousePropagation: PropTypes.bool,
-  clickSensitivity: PropTypes.number,
-  ignoreMouseEvents: PropTypes.bool,
-  // Track
-  track: PropTypes.bool,
-  frame: PropTypes.number,
-  // Children
-  children: PropTypes.any
-});
-/* eslint-enable react/forbid-prop-types */
-
-/* eslint-disable-next-line react/forbid-foreign-prop-types */
-export const MeshPropTypes = Mesh.propTypes;
-
 const MeshMemo = memo(Mesh);
-MeshMemo.displayName = "Mesh";
+MeshMemo.displayName = 'Mesh';
 export default MeshMemo;

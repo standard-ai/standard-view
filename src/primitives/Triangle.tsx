@@ -1,9 +1,7 @@
 // Triangle.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
-import Mesh, { MeshProps, MeshPropTypes } from "./Mesh";
+import Mesh, { MeshProps } from "./Mesh";
 
 const { useRef, useEffect, memo } = React;
 
@@ -76,12 +74,7 @@ const Triangle: React.FunctionComponent<TriangleProps> = function Triangle({
   );
 };
 
-// -----  PropTypes   ----- //
-Triangle.propTypes = exact({
-  points: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  indices: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)),
-  ...MeshPropTypes
-});
+
 
 const TriangleMemo = memo(Triangle);
 TriangleMemo.displayName = "Triangle";

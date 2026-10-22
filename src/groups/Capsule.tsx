@@ -1,13 +1,10 @@
 // Capsule.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import Group, { generateGroupProps } from "./Group";
-import { MeshProps, MeshPropTypes } from "../primitives/Mesh";
+import { MeshProps } from "../primitives/Mesh";
 import Sphere from "../primitives/Sphere";
 import Cylinder from "../primitives/Cylinder";
-import { propTypeNumberArrayOfLength } from "../utils/util";
 
 const { useMemo, memo } = React;
 
@@ -108,13 +105,7 @@ const Capsule: React.FunctionComponent<CapsuleProps> = function Capsule(props) {
   );
 };
 
-// -----  PropTypes   ----- //
-Capsule.propTypes = exact({
-  start: propTypeNumberArrayOfLength(3),
-  end: propTypeNumberArrayOfLength(3),
-  radius: PropTypes.number,
-  ...MeshPropTypes
-});
+
 
 const CapsuleMemo = memo(Capsule);
 CapsuleMemo.displayName = "Capsule";

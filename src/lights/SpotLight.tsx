@@ -1,11 +1,8 @@
 // SpotLight.tsx
 import * as React from "react";
 import * as THREE from "three";
-import PropTypes from "prop-types";
-import exact from "prop-types-exact";
 import LightWithShadows, {
-  CommonLightWithShadowsProps,
-  CommonLightWithShadowsPropTypes
+  CommonLightWithShadowsProps
 } from "./LightWithShadows";
 
 const { useMemo, memo } = React;
@@ -51,15 +48,6 @@ const SpotLight: React.FunctionComponent<SpotLightProps> = function SpotLight({
     />
   );
 };
-
-// -----  PropTypes   ----- //
-SpotLight.propTypes = exact({
-  distance: PropTypes.number,
-  decay: PropTypes.number,
-  angle: PropTypes.number,
-  penumbra: PropTypes.number,
-  ...CommonLightWithShadowsPropTypes
-});
 
 const SpotLightMemo = memo(SpotLight);
 SpotLightMemo.displayName = "SpotLight";
