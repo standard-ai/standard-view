@@ -300,11 +300,12 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
         polarAngle,
         azimuthAngle,
         cameraExtrinsics,
+        cameraIntrinsics: cameraProps,
         controlsProps:
           Object.keys(controlsProps).length > 0 ? controlsProps : undefined,
       };
     },
-    [controlsType, cameraType, controls, cameraExtrinsics]
+    [controlsType, cameraType, controls, cameraExtrinsics, cameraProps]
   );
 
   const values = useRef([]);

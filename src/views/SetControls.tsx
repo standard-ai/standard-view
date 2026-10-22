@@ -22,6 +22,7 @@ const isEqual = (a: any, b: any): boolean => {
 function SetControls({
   controlsType,
   cameraExtrinsics,
+  cameraIntrinsics,
   polarAngle,
   azimuthAngle,
   controlsProps,
@@ -54,6 +55,41 @@ function SetControls({
       }
     },
     [controlsProps, _controlsProps]
+  );
+
+  const [_cameraIntrinsics, setCameraIntrinsics] = useState(cameraIntrinsics);
+  useEffect(
+    function updateCameraIntrinsics() {
+      // Update Camera Intrinsics
+      if (!isEqual(_cameraIntrinsics, cameraIntrinsics)) {
+        setCameraIntrinsics(cameraIntrinsics);
+      }
+    },
+    [cameraIntrinsics, _cameraIntrinsics]
+  );
+
+  // @react-three/fiber applies the Canvas camera prop once, when it creates
+  // the camera, and ignores later changes; so fov, near, far, zoom and the
+  // orthographic bounds given to View3D after mount are applied here.
+  useEffect(
+    function applyCameraIntrinsics() {
+      if (!_cameraIntrinsics) {
+        return;
+      }
+
+      let changed = false;
+      Object.entries(_cameraIntrinsics).forEach(([key, value]) => {
+        if (value != null && typeof value !== 'object' && key in camera) {
+          camera[key] = value;
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        camera.updateProjectionMatrix();
+      }
+    },
+    [camera, _cameraIntrinsics]
   );
 
   const [_cameraExtrinsics, setCameraExtrinsics] = useState(cameraExtrinsics);
