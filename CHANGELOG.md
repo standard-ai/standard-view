@@ -1,11 +1,14 @@
 # Changelog
 
-# 2.0.6
+# 2.0.7
 
 - 💫 `hoverColor` works on the loaders (`GLTF`, `OBJ`, `FBX`, `PCD`): the loaded model's materials are tinted while the pointer is over it and restored on pointer-out; `onPointerOver` and `onPointerOut` still fire
 - 🐞 `color`, `wireframe`, `opacity`, `transparent`, `side`, `depthWrite` and `depthTest` now reach a loaded FBX model (they targeted a `.scene` the loader never returns), an OBJ loaded without an MTL, and a PCD point cloud; `false` and `0` values are applied, and `side` takes the same `front` / `back` / `double` names as `Mesh` (`src/utils/modelMaterials.ts`, with tests)
 - 🧹 A loader no longer reloads its file on every parent re-render when a material prop is set: the material props are memoised on their values
 - 🧹 `FBX` advances its animation mixer with the frame delta `useFrame` already passes instead of its own `THREE.Clock`, which three.js r183+ deprecates and warns about on every construction
+
+# 2.0.6
+
 - 🐞 FBX story: `sophia.fbx` rendered upside down with three.js 0.184, whose `FBXLoader` now rotates a Z-up file -90° about X on load; the story cancels that with +90° instead of adding its own -90°
 - 💫 `onLoad` and `onError` on `GLTF`, `OBJ`, `FBX` and `PCD`: a failed load logs a console error naming the URL, draws nothing (the loading `Label` is removed)
 - 🧹 A load that completes or fails after the URL changed or the component unmounted is ignored, so a slow earlier file never lands on top of a newer one
