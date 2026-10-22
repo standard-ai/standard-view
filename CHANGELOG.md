@@ -1,5 +1,10 @@
 # Changelog
 
+# 2.1.0
+
+- 🐞 `View3D` applies changes to the camera's `fov`, `near`, `far`, `zoom` and orthographic bounds after mount: @react-three/fiber reads the `camera` prop only when it creates the camera, so until now only the position, target, up and roll could change later (`SetControls`)
+- 💫 GLTF story: a `none` option for `gltfPath` so `gltfURL` can be a full URL, a `fitCamera` arg that frames the loaded model from its bounding sphere (so a model of any size is in view, such as the 7 cm ToyCar sample), and a directional light so a model is lit whatever its size
+
 # 2.0.7
 
 - 💫 `hoverColor` works on the loaders (`GLTF`, `OBJ`, `FBX`, `PCD`): the loaded model's materials are tinted while the pointer is over it and restored on pointer-out; `onPointerOver` and `onPointerOut` still fire
