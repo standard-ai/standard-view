@@ -27,9 +27,11 @@ function FBXStory(args: any = {}): React.ReactElement {
     visible = true,
   } = args || {};
 
-  // Calculate rotation based on model
+  // sophia.fbx declares a Z-up axis, so three.js 0.184's FBXLoader rotates it
+  // -90° about X on load; its mesh data is already Y-up, so cancel that here.
+  // samba.fbx (Y-up) needs nothing.
   const calculatedRotation =
-    fbxURL === 'sophia.fbx' ? [-Math.PI / 2, 0, 0] : rotation;
+    fbxURL === 'sophia.fbx' ? [Math.PI / 2, 0, 0] : rotation;
 
   return (
     <View3D

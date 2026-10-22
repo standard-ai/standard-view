@@ -2,6 +2,7 @@
 
 # 2.0.6
 
+- 🐞 FBX story: `sophia.fbx` rendered upside down with three.js 0.184, whose `FBXLoader` now rotates a Z-up file -90° about X on load; the story cancels that with +90° instead of adding its own -90°
 - 💫 `onLoad` and `onError` on `GLTF`, `OBJ`, `FBX` and `PCD`: a failed load logs a console error naming the URL, draws nothing (the loading `Label` is removed)
 - 🧹 A load that completes or fails after the URL changed or the component unmounted is ignored, so a slow earlier file never lands on top of a newer one
 - 📖 Jest coverage of the failure path for `GLTF`, `OBJ` and `PCD` (`test/groups/loaders.test.js`)
