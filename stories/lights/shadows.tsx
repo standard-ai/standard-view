@@ -18,7 +18,7 @@ function ShadowStory(args: any = {}): React.ReactElement {
   const {
     autoRotate = false,
     shadowMapEnabled = true,
-    shadowType = 'pcfsoft',
+    shadowType = 'pcf',
     flamingoCastShadow = true,
     flamingoReceiveShadow = true,
     helmetCastShadow = true,
@@ -136,7 +136,7 @@ function ShadowStory(args: any = {}): React.ReactElement {
 ShadowStory.args = {
   autoRotate: false,
   shadowMapEnabled: true,
-  shadowType: 'pcfsoft',
+  shadowType: 'pcf',
   flamingoCastShadow: true,
   flamingoReceiveShadow: true,
   helmetCastShadow: true,
@@ -167,9 +167,9 @@ ShadowStory.argTypes = {
   },
   shadowType: {
     control: { type: 'select' },
-    options: ['basic', 'pcf', 'pcfsoft'],
-    description: 'Shadow type',
-    defaultValue: 'pcfsoft',
+    options: ['basic', 'pcf'],
+    description: 'Shadow type (pcfsoft is accepted as an alias of pcf)',
+    defaultValue: 'pcf',
   },
   flamingoCastShadow: {
     control: { type: 'boolean' },
