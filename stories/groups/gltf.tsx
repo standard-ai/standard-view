@@ -121,9 +121,13 @@ GLTFStory.argTypes = {
     defaultValue: 0,
   },
   gltfPath: {
-    control: { type: 'select' },
-    options: ['gltf/', 'https://threejs.org/examples/models/gltf/'],
-    description: 'GLTF file path',
+    control: {
+      type: 'select',
+      labels: { '': 'none (gltfURL is the full URL)' },
+    },
+    options: ['gltf/', 'https://threejs.org/examples/models/gltf/', ''],
+    description:
+      'Path prefixed to gltfURL; pick none to give the full URL in gltfURL',
     defaultValue: 'gltf/',
   },
   gltfURL: {
