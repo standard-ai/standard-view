@@ -1,11 +1,46 @@
 // gltf.tsx
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import * as THREE from 'three';
 
 // standard-view
-import { View3D, GLTF, AmbientLight, SpotLight } from '../../src';
+import {
+  View3D,
+  GLTF,
+  AmbientLight,
+  DirectionalLight,
+  SpotLight,
+} from '../../src';
 import { DEFAULT_NORMAL } from '../../src/utils/constants';
 import { STORY_STYLE } from '../utils/common';
+
+// The camera tuned for the bundled city model (tokyo.glb); any other model is
+// framed from its bounding sphere once it has loaded, unless fitCamera is off.
+const DEFAULT_CAMERA = {
+  fov: 45,
+  position: [0, -100, 1100],
+  target: [0, -100, 0],
+  up: [0, 1, 0],
+  far: 10000,
+};
+
+function fitCameraTo(scene: THREE.Object3D): any {
+  const sphere = new THREE.Box3()
+    .setFromObject(scene)
+    .getBoundingSphere(new THREE.Sphere());
+  const radius = Math.max(sphere.radius, 1e-3);
+  // Distance at which a sphere of this radius fills the vertical field of view, plus margin.
+  const distance =
+    (radius / Math.sin((DEFAULT_CAMERA.fov / 2) * (Math.PI / 180))) * 1.2;
+  const { x, y, z } = sphere.center;
+  return {
+    fov: DEFAULT_CAMERA.fov,
+    position: [x, y + radius * 0.3, z + distance],
+    target: [x, y, z],
+    up: [0, 1, 0],
+    near: distance / 100,
+    far: distance * 100,
+  };
+}
 
 function GLTFStory(args: any = {}): React.ReactElement {
   const {
@@ -24,17 +59,19 @@ function GLTFStory(args: any = {}): React.ReactElement {
     visible = true,
     ambientIntensity = 2,
     hoverColor = 'yellow',
+    fitCamera = true,
   } = args || {};
+
+  // Camera framing, recomputed whenever a model finishes loading
+  const [fitted, setFitted] = useState<any>(null);
+  const onLoad = useCallback((gltf: any): void => {
+    setFitted(fitCameraTo(gltf.scene));
+  }, []);
+  const camera = fitCamera && fitted ? fitted : DEFAULT_CAMERA;
 
   return (
     <View3D
-      camera={{
-        fov: 45,
-        position: [0, -100, 1100],
-        target: [0, -100, 0],
-        up: [0, 1, 0],
-        far: 10000,
-      }}
+      camera={camera}
       orbitControls
       style={STORY_STYLE}
       controls={{ autoRotate }}
@@ -42,6 +79,8 @@ function GLTFStory(args: any = {}): React.ReactElement {
     >
       {/* Lights */}
       <AmbientLight intensity={ambientIntensity} />
+      {/* A directional light has no distance falloff, so a model of any size is lit */}
+      <DirectionalLight intensity={2} position={[1, 2, 1]} />
       <SpotLight
         position={[200, 900, 200]}
         distance={10000}
@@ -65,6 +104,7 @@ function GLTFStory(args: any = {}): React.ReactElement {
         receiveShadow={receiveShadow}
         visible={visible}
         hoverColor={hoverColor}
+        onLoad={onLoad}
       />
     </View3D>
   );
@@ -87,6 +127,7 @@ GLTFStory.args = {
   visible: true,
   ambientIntensity: 2,
   hoverColor: 'yellow',
+  fitCamera: true,
 };
 
 GLTFStory.argTypes = {
@@ -171,6 +212,12 @@ GLTFStory.argTypes = {
     control: { type: 'color' },
     description: 'Tint applied to the model while the pointer is over it',
     defaultValue: 'yellow',
+  },
+  fitCamera: {
+    control: { type: 'boolean' },
+    description:
+      'Frame the loaded model from its bounding sphere (off: the fixed camera tuned for tokyo.glb)',
+    defaultValue: true,
   },
 };
 
