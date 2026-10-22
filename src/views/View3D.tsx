@@ -96,7 +96,7 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
   backgroundEquirectangularTextureURL,
   backgroundEquirectangularRGBEURL,
   shadowMapEnabled = false,
-  shadowType = 'pcfsoft',
+  shadowType = 'pcf',
   camera,
   controls = {},
   gl,
@@ -191,7 +191,7 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
     function updateShadowProps() {
       return {
         shadowMapEnabled: shadowMapEnabled ?? true,
-        shadowType: shadowType ?? 'pcfsoft',
+        shadowType: shadowType ?? 'pcf',
       };
     },
     [shadowMapEnabled, shadowType]
@@ -207,12 +207,15 @@ const View3D: React.FunctionComponent<View3DProps> = function View3D({
       if (!shadowProps.shadowMapEnabled) {
         return false;
       }
+      // three.js r182+ deprecates PCFSoftShadowMap: it warns on every shadow
+      // pass and swaps in PCFShadowMap, which is soft as well. 'pcfsoft' is
+      // therefore an alias of 'pcf' rather than fiber's 'soft' preset.
       const presetByType = {
         basic: 'basic', // THREE.BasicShadowMap
         pcf: 'percentage', // THREE.PCFShadowMap
-        pcfsoft: 'soft', // THREE.PCFSoftShadowMap
+        pcfsoft: 'percentage', // alias of pcf
       };
-      return presetByType[shadowProps.shadowType] ?? 'soft';
+      return presetByType[shadowProps.shadowType] ?? 'percentage';
     },
     [shadowProps]
   );
