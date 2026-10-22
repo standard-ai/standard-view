@@ -1,5 +1,9 @@
 # Changelog
 
+# 2.1.1
+
+- 🧹 `View3D`'s default `shadowType` is now `pcf`, and `pcfsoft` maps to the same PCF shadow map: three.js r182+ deprecates `PCFSoftShadowMap` (its `PCFShadowMap` is soft as well) and warned on every shadow pass, which every `View3D` re-render re-triggered
+
 # 2.1.0
 
 - 🐞 `View3D` applies changes to the camera's `fov`, `near`, `far`, `zoom` and orthographic bounds after mount: @react-three/fiber reads the `camera` prop only when it creates the camera, so until now only the position, target, up and roll could change later (`SetControls`)
