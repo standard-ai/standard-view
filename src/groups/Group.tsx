@@ -49,6 +49,8 @@ export interface GroupProps {
   wireframe?: boolean;
   visible?: boolean;
   side?: string | THREE.Side;
+  depthWrite?: boolean;
+  depthTest?: boolean;
   // ShadowProps
   castShadow?: boolean;
   receiveShadow?: boolean;

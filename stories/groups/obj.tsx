@@ -7,7 +7,11 @@ import { View3D, OBJ, AmbientLight, Sphere, SpotLight, Group } from '../../src';
 import { Ground, STORY_STYLE } from '../utils/common';
 import { DEFAULT_NORMAL } from '../../src/utils/constants';
 
-function OBJComponent({ autoRotate, ornamentProps }: any): React.ReactNode {
+function OBJComponent({
+  autoRotate,
+  ornamentProps,
+  hoverColor,
+}: any): React.ReactNode {
   // Ornament
   const Ornament = useCallback(
     function Ornament(props: any): React.ReactNode {
@@ -74,6 +78,7 @@ function OBJComponent({ autoRotate, ornamentProps }: any): React.ReactNode {
           objURL="santa-hat.obj"
           mtlPath="/obj-mtl/santa-hat/"
           mtlURL="santa-hat.mtl"
+          hoverColor={hoverColor}
         />
         <OBJ
           position={[0, -0.9, 0]}
@@ -87,31 +92,34 @@ function OBJComponent({ autoRotate, ornamentProps }: any): React.ReactNode {
           objURL="christmas-tree.obj"
           mtlPath="/obj-mtl/christmas-tree/"
           mtlURL="christmas-tree.mtl"
+          hoverColor={hoverColor}
         />
         {/* Ornaments */}
-        <Ornament position={[-1.1, 5.5, 0]} color="white" />
-        <Ornament position={[1.5, 5, 0]} color="red" />
-        <Ornament position={[-1, 4.3, 1.3]} color="gold" />
-        <Ornament
-          position={[0, 3, -2]}
-          color="white"
-          textureURL="textures/ornament2.png"
-          roughness={0.2}
-          metalness={0.3}
-        />
-        <Ornament position={[0, 3, 2]} color="blue" />
-        <Ornament position={[-1.9, 2.6, -1]} color="green" />
-        <Ornament position={[2.3, 2.5, 0]} color="green" />
-        <Ornament
-          position={[-1.8, 2, 1.8]}
-          color="white"
-          textureURL="textures/ornament.png"
-          roughness={0.2}
-          metalness={0.3}
-        />
-        <Ornament position={[-2, 1, -2]} color="red" />
-        <Ornament position={[2.2, 0.8, 2]} color="white" />
-        <Ornament position={[2.2, 0.9, -1.8]} color="cyan" />
+        <Group hoverColor={hoverColor}>
+          <Ornament position={[-1.1, 5.5, 0]} color="white" />
+          <Ornament position={[1.5, 5, 0]} color="red" />
+          <Ornament position={[-1, 4.3, 1.3]} color="gold" />
+          <Ornament
+            position={[0, 3, -2]}
+            color="white"
+            textureURL="textures/ornament2.png"
+            roughness={0.2}
+            metalness={0.3}
+          />
+          <Ornament position={[0, 3, 2]} color="blue" />
+          <Ornament position={[-1.9, 2.6, -1]} color="green" />
+          <Ornament position={[2.3, 2.5, 0]} color="green" />
+          <Ornament
+            position={[-1.8, 2, 1.8]}
+            color="white"
+            textureURL="textures/ornament.png"
+            roughness={0.2}
+            metalness={0.3}
+          />
+          <Ornament position={[-2, 1, -2]} color="red" />
+          <Ornament position={[2.2, 0.8, 2]} color="white" />
+          <Ornament position={[2.2, 0.9, -1.8]} color="cyan" />
+        </Group>
       </Group>
     </View3D>
   );
@@ -122,6 +130,7 @@ function OBJStory(args: any = {}): React.ReactElement {
     ornamentScale = [0.4, 0.4, 0.4],
     ornamentVisible = true,
     ornamentCastShadow = true,
+    hoverColor = 'yellow',
   } = args || {};
 
   const ornamentProps = {
@@ -133,6 +142,7 @@ function OBJStory(args: any = {}): React.ReactElement {
   const props = {
     autoRotate,
     ornamentProps,
+    hoverColor,
   };
 
   return <OBJComponent {...props} />;
@@ -143,6 +153,7 @@ OBJStory.args = {
   ornamentScale: [0.4, 0.4, 0.4],
   ornamentVisible: true,
   ornamentCastShadow: true,
+  hoverColor: 'yellow',
 };
 
 OBJStory.argTypes = {
@@ -165,6 +176,12 @@ OBJStory.argTypes = {
     control: { type: 'boolean' },
     description: 'Ornament cast shadow',
     defaultValue: true,
+  },
+  hoverColor: {
+    control: { type: 'color' },
+    description:
+      'Tint applied to the hat and the tree while the pointer is over them',
+    defaultValue: 'yellow',
   },
 };
 

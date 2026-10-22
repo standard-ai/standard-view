@@ -25,6 +25,7 @@ function FBXStory(args: any = {}): React.ReactElement {
     roll = 0,
     actionIndex = 0,
     visible = true,
+    hoverColor = 'yellow',
   } = args || {};
 
   // sophia.fbx declares a Z-up axis, so three.js 0.184's FBXLoader rotates it
@@ -67,6 +68,7 @@ function FBXStory(args: any = {}): React.ReactElement {
         fbxPath={fbxPath}
         actionIndex={actionIndex}
         visible={visible}
+        hoverColor={hoverColor}
       />
     </View3D>
   );
@@ -83,6 +85,7 @@ FBXStory.args = {
   roll: 0,
   actionIndex: 0,
   visible: true,
+  hoverColor: 'yellow',
 };
 
 FBXStory.argTypes = {
@@ -136,6 +139,11 @@ FBXStory.argTypes = {
     control: { type: 'boolean' },
     description: 'Model visibility',
     defaultValue: true,
+  },
+  hoverColor: {
+    control: { type: 'color' },
+    description: 'Tint applied to the model while the pointer is over it',
+    defaultValue: 'yellow',
   },
 };
 

@@ -23,6 +23,7 @@ function GLTFStory(args: any = {}): React.ReactElement {
     receiveShadow = true,
     visible = true,
     ambientIntensity = 2,
+    hoverColor = 'yellow',
   } = args || {};
 
   return (
@@ -63,6 +64,7 @@ function GLTFStory(args: any = {}): React.ReactElement {
         castShadow={castShadow}
         receiveShadow={receiveShadow}
         visible={visible}
+        hoverColor={hoverColor}
       />
     </View3D>
   );
@@ -84,6 +86,7 @@ GLTFStory.args = {
   receiveShadow: true,
   visible: true,
   ambientIntensity: 2,
+  hoverColor: 'yellow',
 };
 
 GLTFStory.argTypes = {
@@ -159,6 +162,11 @@ GLTFStory.argTypes = {
     control: { type: 'number', min: 0, max: 5, step: 1 },
     description: 'Ambient light intensity',
     defaultValue: 2,
+  },
+  hoverColor: {
+    control: { type: 'color' },
+    description: 'Tint applied to the model while the pointer is over it',
+    defaultValue: 'yellow',
   },
 };
 

@@ -7,8 +7,14 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import Label from '../primitives/Label';
 import Group, { GroupProps } from './Group';
 import { useViewContext } from '../utils/hooks';
+import {
+  ModelMaterialProps,
+  applyModelMaterialProps,
+  pickModelMaterialProps,
+  setModelHoverTint,
+} from '../utils/modelMaterials';
 
-const { useCallback, useEffect, useMemo, useRef, memo } = React;
+const { useCallback, useEffect, useMemo, useRef, useState, memo } = React;
 
 const DRACO_DECODER_SOURCE =
   'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/jsm/libs/draco/';
@@ -22,44 +28,6 @@ interface GLTFProps extends GroupProps {
   onLoad?: (gltf: GLTFResult) => void;
   /** Called once with the loader's error when the file cannot be loaded. */
   onError?: (error: unknown) => void;
-}
-
-function updateAllMaterials(
-  color: string,
-  /* eslint-disable @typescript-eslint/no-explicit-any */
-  children: any,
-  materialProps: any
-  /* eslint-enable @typescript-eslint/no-explicit-any */
-): void {
-  if (children == null) {
-    return;
-  }
-
-  const _children = Array.isArray(children) ? children : [children];
-
-  _children.map(object => {
-    // Recurse into Groups
-    if (object.constructor.name === 'Group' && object.children) {
-      updateAllMaterials(color, object.children, materialProps);
-    }
-
-    // @ts-ignore:TS2339 material does not exist on Object3D
-    if (object.material) {
-      if (color) {
-        // @ts-ignore:TS2339 material does not exist on Object3D
-        object.material.color.set(color);
-      }
-      Object.entries(materialProps).map(([propName, value]) => {
-        /* eslint-disable no-param-reassign */
-        // @ts-ignore:TS2339 material does not exist on Object3D
-        object.material[propName] = value;
-        /* eslint-enable no-param-reassign */
-        return null;
-      });
-    }
-
-    return null;
-  });
 }
 
 /**
@@ -84,8 +52,7 @@ interface LoadGLTFProps {
   envMap: THREE.Texture;
   castShadow: boolean;
   receiveShadow: boolean;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  materialProps: any;
+  materialProps?: ModelMaterialProps;
   onLoad: (gltf: GLTFResult) => void;
   onError: (error: unknown) => void;
 }
@@ -143,10 +110,7 @@ function loadGLTF({
         removeChildren(group);
 
         // Material Props
-        if (materialProps) {
-          const { color, ...otherMaterialProps } = materialProps;
-          updateAllMaterials(color, gltf.scene.children, otherMaterialProps);
-        }
+        applyModelMaterialProps(gltf.scene, materialProps);
 
         // Env Map + Shadows
         gltf.scene.traverse(mesh => {
@@ -195,10 +159,60 @@ const GLTF: React.FunctionComponent<GLTFProps> = function GLTF({
   loadingLabel = true,
   onLoad,
   onError,
+  hoverColor,
+  onPointerOver,
+  onPointerOut,
   ...otherProps
 }) {
   const group = useRef<THREE.Group | null>(null);
+  const model = useRef<THREE.Object3D | null>(null);
   const { envMap } = useViewContext();
+
+  // Hover
+  // The loaded model is added to the group imperatively, so the hover color
+  // Group clones onto its React children never reaches it. Track the hover
+  // here (through the handlers Group calls) and tint the model's materials.
+  const [hovered, setHovered] = useState(false);
+  const hoveredRef = useRef(false);
+  const hoverColorRef = useRef(hoverColor);
+  hoverColorRef.current = hoverColor;
+  const handlePointerOver = useCallback(
+    function handlePointerOver(eventProps: unknown): void {
+      hoveredRef.current = true;
+      setHovered(true);
+      if (onPointerOver) {
+        onPointerOver(eventProps);
+      }
+    },
+    [onPointerOver]
+  );
+  const handlePointerOut = useCallback(
+    function handlePointerOut(eventProps: unknown): void {
+      hoveredRef.current = false;
+      setHovered(false);
+      if (onPointerOut) {
+        onPointerOut(eventProps);
+      }
+    },
+    [onPointerOut]
+  );
+  // Only attach handlers when something listens, so a loader inside a Group
+  // keeps forwarding events to that Group as before.
+  const hoverHandlers =
+    hoverColor != null || onPointerOver || onPointerOut
+      ? { onPointerOver: handlePointerOver, onPointerOut: handlePointerOut }
+      : {};
+  useEffect(
+    function updateHoverTint() {
+      if (model.current) {
+        setModelHoverTint(
+          model.current,
+          hovered && hoverColor != null ? hoverColor : null
+        );
+      }
+    },
+    [hovered, hoverColor]
+  );
 
   // Latest Callbacks
   // Read at load time through refs, so a new inline function on a re-render
@@ -208,48 +222,46 @@ const GLTF: React.FunctionComponent<GLTFProps> = function GLTF({
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
   const handleLoad = useCallback(function handleLoad(gltf: GLTFResult): void {
+    model.current = gltf.scene;
+    if (hoveredRef.current && hoverColorRef.current != null) {
+      setModelHoverTint(gltf.scene, hoverColorRef.current);
+    }
     if (onLoadRef.current) {
       onLoadRef.current(gltf);
     }
   }, []);
   const handleError = useCallback(function handleError(error: unknown): void {
+    model.current = null;
     if (onErrorRef.current) {
       onErrorRef.current(error);
     }
   }, []);
 
   // Material Props
+  // Memoised on the values, not on the props object, so a re-render (a hover,
+  // a parent update) never restarts the load.
+  const {
+    color,
+    wireframe,
+    opacity,
+    transparent,
+    side,
+    depthWrite,
+    depthTest,
+  } = otherProps;
   const materialProps = useMemo(
     function updateMaterialProps() {
-      // No Material Props
-      if (!otherProps || Object.keys(otherProps).length === 0) {
-        return undefined;
-      }
-
-      // Acceptable Material Props
-      const materialPropsKeys = [
-        'color',
-        'wireframe',
-        'opacity',
-        'transparent',
-        'side',
-        'depthWrite',
-        'depthTest',
-      ];
-
-      // Extract Acceptable Props
-      const props = {};
-      materialPropsKeys.map(propName => {
-        if (otherProps[propName]) {
-          props[propName] = otherProps[propName];
-        }
-
-        return null;
+      return pickModelMaterialProps({
+        color,
+        wireframe,
+        opacity,
+        transparent,
+        side,
+        depthWrite,
+        depthTest,
       });
-
-      return Object.keys(props).length > 0 ? props : undefined;
     },
-    [otherProps]
+    [color, wireframe, opacity, transparent, side, depthWrite, depthTest]
   );
 
   // Environment Map
@@ -303,7 +315,12 @@ const GLTF: React.FunctionComponent<GLTFProps> = function GLTF({
   );
 
   return (
-    <Group ref={group} {...otherProps}>
+    <Group
+      ref={group}
+      hoverColor={hoverColor}
+      {...hoverHandlers}
+      {...otherProps}
+    >
       {loadingLabel && <Label text={loadingText} textColor="red" />}
     </Group>
   );
